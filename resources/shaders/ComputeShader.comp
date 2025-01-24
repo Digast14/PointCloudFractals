@@ -1,0 +1,121 @@
+#version 430 core
+
+layout (local_size_x = 10, local_size_y = 10, local_size_z = 10) in; // Work group size
+
+layout (std430, binding = 0) buffer VoxelBuffer {
+    vec4 vertices[]; // Output vertices
+};
+
+layout (std430, binding = 1) buffer NormalBuffer {
+    vec3 normals[]; // Output vertices
+};
+layout (std430, binding = 2) buffer GlobalIndex {
+    uint globalIndex;
+};
+
+uniform int vertexArrayLength;
+uniform int gridDensity;
+uniform int range;
+
+
+//math function
+vec4 qmul(in vec4 a, in vec4 b) {
+    return vec4(
+    a.x * b.x - a.y * b.y - a.z * b.z - a.w * b.w,
+    a.x * b.y + a.y * b.x + a.z * b.w - a.w * b.z,
+    a.x * b.z - a.y * b.w + a.z * b.x + a.w * b.y,
+    a.x * b.w + a.y * b.z - a.z * b.y + a.w * b.x
+    );
+}
+
+vec4 qdiv(in vec4 a, in vec4 b) {
+    float normSquared = b.x * b.x + b.y * b.y + b.z * b.z + b.w * b.w;
+    if (normSquared == 0.0) return vec4(0.0);
+
+    vec4 bConjugate = vec4(b.x, -b.yzw);
+
+    return vec4(
+    (a.x * bConjugate.x - a.y * bConjugate.y - a.z * bConjugate.z - a.w * bConjugate.w) / normSquared,
+    (a.x * bConjugate.y + a.y * bConjugate.x + a.z * bConjugate.w - a.w * bConjugate.z) / normSquared,
+    (a.x * bConjugate.z - a.y * bConjugate.w + a.z * bConjugate.x + a.w * bConjugate.y) / normSquared,
+    (a.x * bConjugate.w + a.y * bConjugate.z - a.z * bConjugate.y + a.w * bConjugate.x) / normSquared
+    );
+}
+
+vec4 qpow(vec4 c, float p) {
+    vec4 sum = c;
+    for (int i = 1; i < p; i++) {
+        sum = qmul(sum, c);
+    }
+    return sum;
+}
+
+
+//------------------------------------------------
+float julia(in vec3 pos) {
+    vec4 q = vec4(pos, 0);
+    for (int i = 0; i < 200; i++) {
+        q = qmul(q, q) + vec4(-1, 0.2, 0, 0);
+        if (length(q) > 2) return 0.0;
+    }
+    return 1.0;
+}
+
+int n = 3;
+vec4 qFunctionNewton(vec4 q) {
+    return q-qmul(vec4(1,0,1,0),qdiv(qpow(q,n)-vec4(1,0,0,0),n*qpow(q,n-1)));
+}
+
+vec4 qFunctionJula(vec4 q, vec3 c) {
+    return qmul(vec4(1,0,1,0), qmul(q, q)) + vec4(c,0);
+}
+
+float function2(in vec3 c) {
+    vec4 z = vec4(c, 0);
+    vec4 zNudge = z + z * 0.001;
+    for (int iteration = 0; iteration < 100; iteration++) {
+        z = qFunctionNewton(z);
+        zNudge = qFunctionNewton(zNudge);
+        if (length(z - zNudge) > 1.0) {
+            return 0.0;
+        }
+    }
+    return 1.0;
+}
+
+
+vec3 calculateNormal(in vec3 p)
+{
+    vec3 small_step = vec3(0.0);
+    float normalPrecision = 20;
+
+    float gradient_x = 0;
+    float gradient_y = 0;
+    float gradient_z = 0;
+    for (int i = 0; i < normalPrecision; i++) {
+        small_step += vec3(0.001, 0.0, 0.0) * range;
+        gradient_x += function2(p + small_step.xyy) - function2(p - small_step.xyy);
+        gradient_y += function2(p + small_step.yxy) - function2(p - small_step.yxy);
+        gradient_z += function2(p + small_step.yyx) - function2(p - small_step.yyx);
+    }
+    vec3 normal = vec3(gradient_x / normalPrecision, gradient_y / normalPrecision, gradient_z / normalPrecision);
+
+    if (dot(normal, normal) == 0) normal = vec3(0.1);
+    else normalize(normal);
+    return normal;
+}
+
+
+
+void main() {
+    ivec3 gridIndex = ivec3(gl_GlobalInvocationID);
+    vec3 pos = (vec3(gridIndex) / float(gridDensity)) - vec3(range);
+
+    if (function2(pos) > 0 ) return;
+
+    uint currentIndex = atomicAdd(globalIndex, 1);
+    if (currentIndex < vertexArrayLength) {
+        vertices[currentIndex + 1] = vec4(pos, 1.0);
+        normals[currentIndex + 1] = calculateNormal(pos);
+    }
+}
