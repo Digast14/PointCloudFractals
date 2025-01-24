@@ -1,6 +1,5 @@
 package org.example;
 
-import org.example.scene.Scene;
 import org.example.scene.Window;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -8,15 +7,15 @@ import static org.lwjgl.glfw.GLFW.*;
 public class Engine {
 
     private final Window window;
-    private final Scene scene;
+    private final WorldRender render;
     private final IAppLogic appLogic;
 
 
     public Engine(String WindowTitle, int width, int height, IAppLogic appLogic) {
         window = new Window(WindowTitle, width, height);
-        scene = new Scene(width, height, new Scene.SceneSettings());
+        render = new WorldRender(width, height);
         this.appLogic = appLogic;
-        appLogic.init(window, scene);
+        appLogic.init(window, render);
 
     }
 
@@ -35,9 +34,9 @@ public class Engine {
             while (steps >= frameRate) {
                 steps -= frameRate;
             }
-            appLogic.update(window, scene);
-            appLogic.input(window, scene);
-            scene.render();
+            appLogic.update(window, render);
+            appLogic.input(window, render);
+            render.render();
             sync(current);
 
             glfwSwapBuffers(window.getWindowPointer());
@@ -58,7 +57,7 @@ public class Engine {
 
     private void cleanup() {
         appLogic.cleanup();
-        scene.cleanup();
+        render.cleanup();
         window.cleanup();
     }
 }

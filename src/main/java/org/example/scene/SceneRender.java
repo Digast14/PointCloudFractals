@@ -8,7 +8,7 @@ import static org.lwjgl.opengl.GL42.glMemoryBarrier;
 import static org.lwjgl.opengl.GL43.*;
 import static org.lwjgl.opengl.GL43.GL_SHADER_STORAGE_BARRIER_BIT;
 
-public class Scene {
+public class SceneRender {
 
     private int shaderProgram;
     private int computeShaderProgram;
@@ -20,22 +20,18 @@ public class Scene {
 
     private final float range;
     private final int workGroupDimension;
-    private final int threadDimension;
+    private final int totalThreadDimension;
     private final int totalThreads;
     private final int quadSize;
 
     private UniformsMap uniformsMap;
 
-    private final Camera camera;
+    public SceneRender(SceneSettings sceneSettings){
 
-    public Scene(int width, int height, SceneSettings sceneSettings){
-        camera = new Camera(width, height);
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
+
         workGroupDimension = sceneSettings.workGroupDimension;
-        threadDimension = sceneSettings.threadDimension;
-        totalThreads = sceneSettings.totalThreads;
+        totalThreadDimension = workGroupDimension * sceneSettings.threadDimension;
+        totalThreads = totalThreadDimension * totalThreadDimension * totalThreadDimension;
         range = sceneSettings.range;
         quadSize = sceneSettings.quadSize;
 
@@ -69,7 +65,7 @@ public class Scene {
     }
 
     private void dispatchCompute() {
-        int gridDensity = (int) (threadDimension/(range*2));
+        int gridDensity = (int) (totalThreadDimension/(range*2));
         glUseProgram(computeShaderProgram);
         glUniform1i(glGetUniformLocation(computeShaderProgram, "vertexArrayLength"), totalThreads);
         glUniform1i(glGetUniformLocation(computeShaderProgram, "gridDensity"), gridDensity);
@@ -92,22 +88,20 @@ public class Scene {
         glPointSize(quadSize);
     }
 
-    private void parseUniform(){
+    private void parseUniform(Camera camera){
         uniformsMap.setUniform("projection", camera.getProjectionMatrix());
         uniformsMap.setUniform("view", camera.getViewMatrix());
     }
 
-    public void render(){
+    public void render(Camera camera){
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         glUseProgram(shaderProgram);
-        parseUniform();
+        parseUniform(camera);
         glDrawArrays(GL_POINTS, 0, totalThreads);
         glUseProgram(0);
     }
 
-    public Camera getCamera(){
-        return camera;
-    }
 
     public float getRange(){
         return range;
@@ -120,10 +114,9 @@ public class Scene {
     }
 
     public static class SceneSettings{
-        public float range = 2;
-        public int workGroupDimension = 20;
-        public int threadDimension = 10 * workGroupDimension;
-        public int totalThreads = threadDimension * threadDimension * threadDimension;
+        public float range = 1f;
+        public int workGroupDimension = 24;
+        public int threadDimension = 10;
         public int quadSize = 5;
     }
 }

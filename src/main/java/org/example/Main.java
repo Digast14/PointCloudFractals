@@ -1,6 +1,5 @@
 package org.example;
 import org.example.scene.Camera;
-import org.example.scene.Scene;
 import org.example.scene.Window;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -23,15 +22,16 @@ public class Main implements IAppLogic {
     private static double yPos;
 
     @Override
-    public void init(Window window, Scene scene) {
+    public void init(Window window, WorldRender render) {
         xPos = 0.0;
         yPos = 0.0;
     }
 
     @Override
-    public void input(Window window, Scene scene) {
-        float move = 0.01f * scene.getRange();
-        Camera camera = scene.getCamera();
+    public void input(Window window, WorldRender render) {
+
+        Camera camera = render.getCamera();
+        float move = 0.01f * camera.getSpeed();
         if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)  camera.moveDown(move);
         if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_SPACE) == GLFW_PRESS) camera.moveUp(move);
         if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_W) == GLFW_PRESS) camera.moveForward(move);
@@ -50,7 +50,7 @@ public class Main implements IAppLogic {
     }
 
     @Override
-    public void update(Window window, Scene scene) {
+    public void update(Window window, WorldRender render) {
         //nothing to update yet
     }
 }

@@ -7,13 +7,14 @@ import java.lang.Math;
 
 public class Camera {
 
-    private Vector3f direction;
-    private Vector3f position;
-    private Vector3f right;
-    private Vector2f rotation;
-    private Vector3f up;
-    private Matrix4f viewMatrix;
-    private Projection projection;
+    private final Vector3f direction;
+    private final Vector3f position;
+    private final Vector3f right;
+    private final Vector2f rotation;
+    private final Vector3f up;
+    private final Matrix4f viewMatrix;
+    private final Projection projection;
+    private float speed;
 
     public Camera(int resX, int resY) {
         direction = new Vector3f();
@@ -23,6 +24,7 @@ public class Camera {
         viewMatrix = new Matrix4f();
         rotation = new Vector2f();
         projection = new Projection(resX, resY);
+        speed = 1;
     }
 
     public void addRotation(float x, float y) {
@@ -95,6 +97,14 @@ public class Camera {
     public void setRotation(float x, float y) {
         rotation.set(x, y);
         recalculate();
+    }
+
+    public void setSpeed(float speed){
+        this.speed = speed;
+    }
+
+    public float getSpeed(){
+        return speed;
     }
 
 }
