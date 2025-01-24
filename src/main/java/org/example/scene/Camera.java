@@ -1,4 +1,4 @@
-package org.example;
+package org.example.scene;
 
 
 import org.joml.*;
@@ -13,15 +13,16 @@ public class Camera {
     private Vector2f rotation;
     private Vector3f up;
     private Matrix4f viewMatrix;
+    private Projection projection;
 
-    public Camera() {
+    public Camera(int resX, int resY) {
         direction = new Vector3f();
         right = new Vector3f();
         up = new Vector3f();
         position = new Vector3f();
         viewMatrix = new Matrix4f();
         rotation = new Vector2f();
-
+        projection = new Projection(resX, resY);
     }
 
     public void addRotation(float x, float y) {
@@ -33,6 +34,10 @@ public class Camera {
 
     public Vector3f getPosition() {
         return position;
+    }
+
+    public Matrix4f getProjectionMatrix(){
+        return projection.getProjMatrix();
     }
 
     public Matrix4f getViewMatrix() {

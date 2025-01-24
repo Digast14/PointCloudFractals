@@ -1,4 +1,4 @@
-package org.example;
+package org.example.scene;
 
 import org.joml.Matrix4f;
 

@@ -15,7 +15,7 @@ layout (std430, binding = 2) buffer GlobalIndex {
 
 uniform int vertexArrayLength;
 uniform int gridDensity;
-uniform int range;
+uniform float range;
 
 
 //math function
