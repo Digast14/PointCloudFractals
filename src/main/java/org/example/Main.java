@@ -2,7 +2,7 @@ package org.example;
 import static org.lwjgl.glfw.GLFW.*;
 
 
-
+//test comment
 public class Main  {
     public static void main(String[] args){
         runTest();
