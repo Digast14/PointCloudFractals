@@ -26,41 +26,18 @@ public class Window {
         this.resX = resX;
         this.resY = resY;
 
-        System.out.println("Hello to this Shader test!");
-
         GLFWErrorCallback.createPrint(System.err).set();
         if (!glfwInit()) throw new IllegalStateException("Unable to initialize GLFW");
 
-        // Initialize GLFW
         glfwDefaultWindowHints();
+
         windowPointer = glfwCreateWindow(resX, resY, title, NULL, NULL);
-
-        try (
-                MemoryStack stack = stackPush()) {
-            IntBuffer pWidth = stack.mallocInt(1); // int*
-            IntBuffer pHeight = stack.mallocInt(1); // int*
-
-            // Get the window size passed to glfwCreateWindow
-            glfwGetWindowSize(windowPointer, pWidth, pHeight);
-
-            // Get the resolution of the primary monitor
-            GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
-            // Center the window
-            glfwSetWindowPos(
-                    windowPointer,
-                    (vidmode.width() - pWidth.get(0)) / 2,
-                    (vidmode.height() - pHeight.get(0)) / 2
-            );
-        } // the stack frame is popped automatically
 
         glfwSetKeyCallback(windowPointer, (window, key, scancode, action, mods) -> {
             keyCallBack(key, action);
         });
 
-        // Make OpenGL context current
         glfwMakeContextCurrent(windowPointer);
-        GL.createCapabilities(); //Initialize OpenGL bindings
     }
 
 
@@ -95,5 +72,4 @@ public class Window {
     public int getHeight(){
         return resY;
     }
-
 }

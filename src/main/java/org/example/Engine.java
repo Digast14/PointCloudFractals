@@ -1,5 +1,9 @@
 package org.example;
 
+import imgui.ImGui;
+import imgui.gl3.ImGuiImplGl3;
+import imgui.glfw.ImGuiImplGlfw;
+import org.example.gui.GuiLayer;
 import org.example.scene.Window;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -9,15 +13,18 @@ public class Engine {
     private final Window window;
     private final WorldRender render;
     private final IAppLogic appLogic;
-    private IGuiInstance guiInstance;
+    private GuiLayer guiLayer;
 
 
-    public Engine(String WindowTitle, int width, int height, IAppLogic appLogic, IGuiInstance guiInstance) {
+
+    public Engine(String WindowTitle, int width, int height, IAppLogic appLogic ) {
         window = new Window(WindowTitle, width, height);
         render = new WorldRender(window);
+        guiLayer = new GuiLayer();
+
         this.appLogic = appLogic;
-        this.guiInstance = guiInstance;
         appLogic.init(window, render);
+
     }
 
     public void run(){
@@ -36,10 +43,9 @@ public class Engine {
                 steps -= frameRate;
             }
 
-            boolean inputConsumed = (guiInstance != null) ? guiInstance.handleGuiInput(render, window) : false;
-            appLogic.input(window, render, inputConsumed);
+            appLogic.input(window, render, false);
             appLogic.update(window, render);
-            render.render(guiInstance);
+            render.render(guiLayer);
 
             sync(current);
 
@@ -47,6 +53,7 @@ public class Engine {
         }
         cleanup();
     }
+
 
     private static void sync(double loopStartTime) {
         float loopSlot = 1f / 50;

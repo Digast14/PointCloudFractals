@@ -26,8 +26,6 @@ public class SceneRender {
     private UniformsMap uniformsMap;
 
     public SceneRender(SceneSettings sceneSettings){
-
-
         workGroupDimension = sceneSettings.workGroupDimension;
         totalThreadDimension = workGroupDimension * sceneSettings.threadDimension;
         totalThreads = totalThreadDimension * totalThreadDimension * totalThreadDimension;

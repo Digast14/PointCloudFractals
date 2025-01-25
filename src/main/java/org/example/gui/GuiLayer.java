@@ -74,11 +74,11 @@ public class GuiLayer {
         ImGui.inputText("Input", text);
         if (ImGui.button("compile Function")) {
             System.out.println("Text entered: " + text.get());
-            //FunctionMakerGLSL codeEdit = new FunctionMakerGLSL(text.get());
-            //function = codeEdit.code;
+            FunctionMakerGLSL codeEdit = new FunctionMakerGLSL(text.get());
+            function = codeEdit.code;
             System.out.println(function);
             newFunction = true;
-            //polynomialDegree = codeEdit.highestPolynomial;
+            polynomialDegree = codeEdit.highestPolynomial;
             System.out.println("highest polynomial degree ist:" + polynomialDegree);
         } else newFunction = false;
 
