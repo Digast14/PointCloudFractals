@@ -1,18 +1,13 @@
 package org.example.scene;
 
-import org.joml.Vector2i;
 import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.glfw.GLFWVidMode;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.system.MemoryStack;
+import org.tinylog.Logger;
 
-import java.nio.IntBuffer;
 import java.util.concurrent.Callable;
 
 import static java.sql.Types.NULL;
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.system.MemoryStack.stackPush;
 
 
 public class Window {
@@ -21,8 +16,10 @@ public class Window {
 
     private int resX;
     private int resY;
+    private Callable<Void> resizeFunc;
 
-    public Window(String title, int resX, int resY) {
+    public Window(String title, int resX, int resY, Callable<Void> resizeFunc) {
+        this.resizeFunc = resizeFunc;
         this.resX = resX;
         this.resY = resY;
 
@@ -36,6 +33,10 @@ public class Window {
         glfwSetKeyCallback(windowPointer, (window, key, scancode, action, mods) -> {
             keyCallBack(key, action);
         });
+        glfwSetFramebufferSizeCallback(windowPointer, (window, w, h) -> {
+            resized(w, h);
+        });
+
 
         glfwMakeContextCurrent(windowPointer);
     }
@@ -44,6 +45,17 @@ public class Window {
     public void keyCallBack(int key, int action) {
         if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
             glfwSetWindowShouldClose(windowPointer, true); // We will detect this in the rendering loop
+        }
+    }
+
+    protected void resized(int width, int height) {
+        resX = width;
+        resY = height;
+        System.out.println("resize!");
+        try {
+            resizeFunc.call();
+        } catch (Exception excp) {
+            Logger.error("Error calling resize callback", excp);
         }
     }
 
@@ -64,12 +76,12 @@ public class Window {
     }
 
 
-    public int getWidth(){
+    public int getWidth() {
         return resX;
     }
 
 
-    public int getHeight(){
+    public int getHeight() {
         return resY;
     }
 }

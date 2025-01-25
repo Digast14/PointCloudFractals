@@ -14,8 +14,8 @@ import static org.lwjgl.opengl.GL11.*;
 public class WorldRender {
 
     private final Camera camera;
-    private SceneRender sceneRender;
-    private GuiRender guiRender;
+    private final SceneRender sceneRender;
+    private final GuiRender guiRender;
 
     public WorldRender(Window window) {
         GL.createCapabilities(); //Initialize OpenGL bindings
@@ -27,9 +27,14 @@ public class WorldRender {
         guiRender = new GuiRender(window);
     }
 
+    public void resize(int resX, int resY){
+        camera.resize(resX, resY);
+    }
 
-    public void render(GuiLayer guiLayer){
+
+    public void render(GuiLayer guiLayer, Window window){
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glViewport(0, 0, window.getWidth(), window.getHeight());
 
         sceneRender.render(camera);
         guiRender.render(guiLayer);

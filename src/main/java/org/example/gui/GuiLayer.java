@@ -11,8 +11,8 @@ import org.joml.Vector4f;
 
 public class GuiLayer {
 
-    private float[] startFloat = {0.0f};
-    private float[] startFloatSpeed = {0.0f};
+    private final float[] startFloat = {0.0f};
+    private final float[] startFloatSpeed = {0.0f};
 
     private final float[] col = {1.0f, 1.0f, 1.0f};
     private final float[] col2 = {1.0f, 1.0f, 1.0f};
@@ -31,7 +31,6 @@ public class GuiLayer {
 
 
     private final ImString text = new ImString(128); // Persistent buffer
-
 
     public float time = 0;
     public Vector3f color = new Vector3f(1.0f, 1.0f, 1.0f);

@@ -1,8 +1,6 @@
 package org.example;
 
-import imgui.ImGui;
-import imgui.gl3.ImGuiImplGl3;
-import imgui.glfw.ImGuiImplGlfw;
+
 import org.example.gui.GuiLayer;
 import org.example.scene.Window;
 
@@ -13,12 +11,15 @@ public class Engine {
     private final Window window;
     private final WorldRender render;
     private final IAppLogic appLogic;
-    private GuiLayer guiLayer;
-
+    private final GuiLayer guiLayer;
 
 
     public Engine(String WindowTitle, int width, int height, IAppLogic appLogic ) {
-        window = new Window(WindowTitle, width, height);
+        window = new Window(WindowTitle, width, height, () -> {
+            resize();
+            return null;
+        });
+
         render = new WorldRender(window);
         guiLayer = new GuiLayer();
 
@@ -26,6 +27,13 @@ public class Engine {
         appLogic.init(window, render);
 
     }
+
+    private void resize() {
+        int width = window.getWidth();
+        int height = window.getHeight();
+        render.resize(width,height);
+    }
+
 
     public void run(){
         double frameRate = 1.0d / 30.0d;
@@ -45,7 +53,7 @@ public class Engine {
 
             appLogic.input(window, render, false);
             appLogic.update(window, render);
-            render.render(guiLayer);
+            render.render(guiLayer, window);
 
             sync(current);
 
@@ -65,6 +73,7 @@ public class Engine {
             }
         }
     }
+
 
     private void cleanup() {
         appLogic.cleanup();

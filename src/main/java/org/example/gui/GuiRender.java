@@ -1,6 +1,7 @@
 package org.example.gui;
 
 import imgui.ImGui;
+import imgui.ImGuiIO;
 import imgui.flag.ImGuiConfigFlags;
 import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
@@ -9,11 +10,14 @@ import org.lwjgl.glfw.GLFW;
 
 public class GuiRender {
 
-    private ImGuiImplGlfw imGuiGlfw = new ImGuiImplGlfw();
-    private ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
+    private final ImGuiImplGlfw imGuiGlfw = new ImGuiImplGlfw();
+    private final ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
 
     public GuiRender(Window window){
         ImGui.createContext();
+        ImGuiIO io = ImGui.getIO();
+        io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable);
+
         imGuiGlfw.init(window.getWindowPointer(), true);
         imGuiGl3.init("#version 130");
     }

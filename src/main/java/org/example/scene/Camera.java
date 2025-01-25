@@ -107,4 +107,8 @@ public class Camera {
         return speed;
     }
 
+    public void resize(int resX, int resY){
+        projection.updateProjMatrix(resX, resY);
+    }
+
 }
