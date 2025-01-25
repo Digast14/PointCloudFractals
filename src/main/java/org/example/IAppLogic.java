@@ -8,7 +8,7 @@ public interface IAppLogic {
 
     void init(Window window, WorldRender render);
 
-    void input(Window window, WorldRender render);
+    void input(Window window, WorldRender render, boolean inputConsumed);
 
     void update(Window window, WorldRender render);
 }

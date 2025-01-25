@@ -44,6 +44,11 @@ public class UniformsMap {
         glUniform1f(getUniformLocation(uniformName), value);
     }
 
+    public void setUniform(String uniformName,  Vector2f value) {
+        glUniform2f(getUniformLocation(uniformName), value.x, value.y);
+    }
+
+
     public void setUniform(String uniformName, Matrix4f value) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             glUniformMatrix4fv(getUniformLocation(uniformName), false, value.get(stack.mallocFloat(16)));

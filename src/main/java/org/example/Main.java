@@ -1,15 +1,20 @@
 package org.example;
+import imgui.ImGui;
+import imgui.ImGuiIO;
+import org.example.gui.GuiLayer;
 import org.example.scene.Camera;
 import org.example.scene.Window;
+import org.joml.Vector2f;
 
 import static org.lwjgl.glfw.GLFW.*;
 
 
 //test comment
-public class Main implements IAppLogic {
+public class Main implements IAppLogic, IGuiInstance {
+    private static Engine gameEngine;
     public static void main(String[] args){
         Main main = new Main();
-        Engine gameEngine = new Engine("Point Cloud Shader", 1920, 1080, main);
+        gameEngine = new Engine("Point Cloud Shader", 1920, 1080, main, main);
         gameEngine.run();
     }
 
@@ -28,8 +33,10 @@ public class Main implements IAppLogic {
     }
 
     @Override
-    public void input(Window window, WorldRender render) {
-
+    public void input(Window window, WorldRender render, boolean inputConsumed) {
+        if (inputConsumed) {
+            return;
+        }
         Camera camera = render.getCamera();
         float move = 0.01f * camera.getSpeed();
         if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)  camera.moveDown(move);
@@ -44,7 +51,9 @@ public class Main implements IAppLogic {
         double[] nextYPos = new double[1];
 
         glfwGetCursorPos(window.getWindowPointer(), nextXPos, nextYPos);
-        camera.addRotation((float) -((yPos - nextYPos[0])*0.01),(float) ((xPos - nextXPos[0])*0.01));
+        if(glfwGetMouseButton(window.getWindowPointer(),GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS){
+            camera.addRotation((float) ((yPos - nextYPos[0])*0.005),(float) -((xPos - nextXPos[0])*0.005));
+        }
         xPos = nextXPos[0];
         yPos = nextYPos[0];
     }
@@ -52,5 +61,24 @@ public class Main implements IAppLogic {
     @Override
     public void update(Window window, WorldRender render) {
         //nothing to update yet
+    }
+
+    @Override
+    public void drawGui(GuiLayer guiLayer) {
+        ImGui.newFrame();
+        guiLayer.gui();
+        ImGui.endFrame();
+        ImGui.render();
+    }
+
+    @Override
+    public boolean handleGuiInput(WorldRender scene, Window window) {
+        ImGuiIO imGuiIO = ImGui.getIO();
+        Vector2f mousePos = new Vector2f((float)xPos, (float)yPos);
+        imGuiIO.addMousePosEvent(mousePos.x, mousePos.y);
+        imGuiIO.addMouseButtonEvent(0,(glfwGetMouseButton(window.getWindowPointer(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS));
+        imGuiIO.addMouseButtonEvent(1, (glfwGetMouseButton(window.getWindowPointer(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS));
+
+        return imGuiIO.getWantCaptureMouse() || imGuiIO.getWantCaptureKeyboard();
     }
 }

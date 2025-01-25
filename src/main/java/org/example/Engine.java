@@ -9,14 +9,15 @@ public class Engine {
     private final Window window;
     private final WorldRender render;
     private final IAppLogic appLogic;
+    private IGuiInstance guiInstance;
 
 
-    public Engine(String WindowTitle, int width, int height, IAppLogic appLogic) {
+    public Engine(String WindowTitle, int width, int height, IAppLogic appLogic, IGuiInstance guiInstance) {
         window = new Window(WindowTitle, width, height);
-        render = new WorldRender(width, height);
+        render = new WorldRender(window);
         this.appLogic = appLogic;
+        this.guiInstance = guiInstance;
         appLogic.init(window, render);
-
     }
 
     public void run(){
@@ -34,9 +35,12 @@ public class Engine {
             while (steps >= frameRate) {
                 steps -= frameRate;
             }
+
+            boolean inputConsumed = (guiInstance != null) ? guiInstance.handleGuiInput(render, window) : false;
+            appLogic.input(window, render, inputConsumed);
             appLogic.update(window, render);
-            appLogic.input(window, render);
-            render.render();
+            render.render(guiInstance);
+
             sync(current);
 
             glfwSwapBuffers(window.getWindowPointer());

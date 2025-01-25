@@ -17,7 +17,6 @@ public class SceneRender {
     private int normalBuffer;
     private int globalIndexBuffer;
 
-
     private final float range;
     private final int workGroupDimension;
     private final int totalThreadDimension;
@@ -100,11 +99,6 @@ public class SceneRender {
         parseUniform(camera);
         glDrawArrays(GL_POINTS, 0, totalThreads);
         glUseProgram(0);
-    }
-
-
-    public float getRange(){
-        return range;
     }
 
     public void cleanup() {

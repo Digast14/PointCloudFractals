@@ -22,8 +22,6 @@ public class Window {
     private int resX;
     private int resY;
 
-    private Callable<Void> resizeFunc;
-
     public Window(String title, int resX, int resY) {
         this.resX = resX;
         this.resY = resY;
@@ -56,12 +54,21 @@ public class Window {
             );
         } // the stack frame is popped automatically
 
+        glfwSetKeyCallback(windowPointer, (window, key, scancode, action, mods) -> {
+            keyCallBack(key, action);
+        });
+
         // Make OpenGL context current
         glfwMakeContextCurrent(windowPointer);
-        glfwSetInputMode(windowPointer, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         GL.createCapabilities(); //Initialize OpenGL bindings
     }
 
+
+    public void keyCallBack(int key, int action) {
+        if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
+            glfwSetWindowShouldClose(windowPointer, true); // We will detect this in the rendering loop
+        }
+    }
 
 
     public void cleanup() {
@@ -74,13 +81,19 @@ public class Window {
         }
     }
 
+
     public long getWindowPointer() {
         return windowPointer;
     }
 
-    public Vector2i getWindowRes() {
-        return new Vector2i(resX, resY);
+
+    public int getWidth(){
+        return resX;
     }
 
+
+    public int getHeight(){
+        return resY;
+    }
 
 }
