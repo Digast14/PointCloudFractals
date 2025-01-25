@@ -20,6 +20,8 @@ public class GuiLayer {
 
     private boolean autoT = false;
     public boolean gameMode = false;
+    public boolean local3dFractal = false;
+    public boolean local3dFractalChangeMode = false;
     private boolean booleanQZeroC = false;
     public int qZeroC = 0;
     public Vector4f qZero = new Vector4f(0f, 0f, 0f, 0f);
@@ -94,6 +96,12 @@ public class GuiLayer {
             }
         }
 
+        if (ImGui.checkbox("Local Point Cloud Fractal", local3dFractal)) {
+            local3dFractal = !local3dFractal;
+            local3dFractalChangeMode = true;
+        }else{
+            local3dFractalChangeMode = false;
+        }
 
         if (ImGui.checkbox("gameMode", gameMode)) {
             gameMode = !gameMode;

@@ -1,6 +1,8 @@
 package org.example;
 
 
+import imgui.ImGui;
+import imgui.ImGuiIO;
 import org.example.gui.GuiLayer;
 import org.example.scene.Window;
 
@@ -51,7 +53,10 @@ public class Engine {
                 steps -= frameRate;
             }
 
-            appLogic.input(window, render, false);
+            ImGuiIO imGuiIO = ImGui.getIO();
+            if(!imGuiIO.getWantCaptureMouse() || !imGuiIO.getWantCaptureKeyboard()){
+                appLogic.input(window, render);
+            }
             appLogic.update(window, render);
             render.render(guiLayer, window);
 

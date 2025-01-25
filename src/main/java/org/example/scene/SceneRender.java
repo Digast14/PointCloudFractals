@@ -1,5 +1,9 @@
 package org.example.scene;
 
+import org.example.gui.GuiLayer;
+
+import java.sql.SQLOutput;
+
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.glBindBufferBase;
@@ -10,8 +14,8 @@ import static org.lwjgl.opengl.GL43.GL_SHADER_STORAGE_BARRIER_BIT;
 
 public class SceneRender {
 
-    private int shaderProgram;
-    private int computeShaderProgram;
+    private ShaderProgramm shaderProgram;
+    private ShaderProgramm computeShaderProgram;
 
     private int ssbo;
     private int normalBuffer;
@@ -35,9 +39,13 @@ public class SceneRender {
         initShaders();
     }
 
+
     private void initShaders(){
-        computeShaderProgram = ShaderProgramm.shaderMaker("resources/shaders/ComputeShader.comp", GL_COMPUTE_SHADER);
-        shaderProgram = ShaderProgramm.shaderMaker("resources/shaders/vertexShader.vert", GL_VERTEX_SHADER, "resources/shaders/fragmentShader.frag", GL_FRAGMENT_SHADER);
+        computeShaderProgram = new  ShaderProgramm("resources/shaders/ComputeShader.comp", GL_COMPUTE_SHADER);
+        shaderProgram = new ShaderProgramm("resources/shaders/vertexShader.vert", GL_VERTEX_SHADER, "resources/shaders/fragmentShader.frag", GL_FRAGMENT_SHADER);
+
+        System.out.println("Compute Shader ID: " + computeShaderProgram.getProgramID());
+        System.out.println("Vertex Shader ID: " + shaderProgram.getProgramID());
 
         createBuffers();
         dispatchCompute();
@@ -63,18 +71,20 @@ public class SceneRender {
 
     private void dispatchCompute() {
         int gridDensity = (int) (totalThreadDimension/(range*2));
-        glUseProgram(computeShaderProgram);
-        glUniform1i(glGetUniformLocation(computeShaderProgram, "vertexArrayLength"), totalThreads);
-        glUniform1i(glGetUniformLocation(computeShaderProgram, "gridDensity"), gridDensity);
-        glUniform1f(glGetUniformLocation(computeShaderProgram, "range"), range);
+        int id = computeShaderProgram.getProgramID();
+        glUseProgram(id);
+        glUniform1i(glGetUniformLocation(id, "vertexArrayLength"), totalThreads);
+        glUniform1i(glGetUniformLocation(id, "gridDensity"), gridDensity);
+        glUniform1f(glGetUniformLocation(id, "range"), range);
         glDispatchCompute(workGroupDimension, workGroupDimension, workGroupDimension);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
-        glDeleteProgram(computeShaderProgram);
+        computeShaderProgram.cleanup();
     }
 
     private void dispatchVertex() {
-        glUseProgram(shaderProgram);
-        uniformsMap = new UniformsMap(shaderProgram);
+        int id = shaderProgram.getProgramID();
+        glUseProgram(id);
+        uniformsMap = new UniformsMap(id);
         uniformsMap.createUniform("projection");
         uniformsMap.createUniform("view");
 
@@ -90,17 +100,36 @@ public class SceneRender {
         uniformsMap.setUniform("view", camera.getViewMatrix());
     }
 
-    public void render(Camera camera){
+    public void render(Camera camera, GuiLayer guiLayer){
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
+        shaderProgram.bind();
         parseUniform(camera);
         glDrawArrays(GL_POINTS, 0, totalThreads);
-        glUseProgram(0);
+        shaderProgram.unbind();
+
+        recompile(guiLayer);
+    }
+
+    private void recompile(GuiLayer guiLayer){
+        if(guiLayer.newFunction){
+            shaderProgram.cleanup();
+            glDeleteBuffers(ssbo);
+            glDeleteBuffers(normalBuffer);
+            glDeleteBuffers(globalIndexBuffer);
+
+            computeShaderProgram = new  ShaderProgramm("resources/shaders/ComputeShader.comp", GL_COMPUTE_SHADER);
+            computeShaderProgram.editShader(GL_COMPUTE_SHADER, 0, guiLayer.function);
+            shaderProgram = new ShaderProgramm("resources/shaders/vertexShader.vert", GL_VERTEX_SHADER, "resources/shaders/fragmentShader.frag", GL_FRAGMENT_SHADER);
+            createBuffers();
+            dispatchCompute();
+            dispatchVertex();
+        }
     }
 
     public void cleanup() {
-        glDeleteProgram(shaderProgram);
+        shaderProgram.cleanup();
+        glDeleteBuffers(ssbo);
         glDeleteBuffers(normalBuffer);
         glDeleteBuffers(globalIndexBuffer);
     }

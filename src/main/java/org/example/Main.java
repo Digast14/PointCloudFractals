@@ -28,19 +28,22 @@ public class Main implements IAppLogic{
     }
 
     @Override
-    public void input(Window window, WorldRender render, boolean inputConsumed) {
-        if (inputConsumed) {
-            return;
-        }
+    public void input(Window window, WorldRender render) {
+
         Camera camera = render.getCamera();
-        float move = 0.01f * camera.getSpeed();
+        float move = 0.02f;
         if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)  camera.moveDown(move);
         if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_SPACE) == GLFW_PRESS) camera.moveUp(move);
         if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_W) == GLFW_PRESS) camera.moveForward(move);
         if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_A) == GLFW_PRESS) camera.moveLeft(move);
         if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_S) == GLFW_PRESS) camera.moveBackwards(move);
         if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_D) == GLFW_PRESS) camera.moveRight(move);
+        if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_Q) == GLFW_PRESS) camera.speedUp(1.05F);;
+        if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_E) == GLFW_PRESS) camera.speedDown(1.05F);
         if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_R) == GLFW_PRESS) camera.setRotation((float)Math.PI, 0);
+        if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_1) == GLFW_PRESS) camera.setBlackAndWhite();
+        if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_2) == GLFW_PRESS) camera.setRGB();
+        if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_3) == GLFW_PRESS) camera.setColor();
 
         double[] nextXPos = new double[1];
         double[] nextYPos = new double[1];

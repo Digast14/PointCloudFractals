@@ -42,6 +42,25 @@ vec4 qdiv(in vec4 a, in vec4 b) {
     );
 }
 
+//expanded functions
+vec4 qsin(vec4 q) {
+    float a = q.x;
+    vec3 v = vec3(q.yzw);
+    float vabs = length(v);
+    return vec4(sin(a) * cosh(vabs), cos(a) * sinh((vabs)) * v / vabs);
+}
+vec4 qcos(vec4 q) {
+    float a = q.x;
+    vec3 v = vec3(q.yzw);
+    float vabs = length(v);
+    return vec4(cos(a) * cosh(vabs), -sin(a) * sinh((vabs)) * v / vabs);
+}
+vec4 qexp(vec4 q) {
+    float expA = exp(q.x);
+    vec3 v = vec3(q.yzw);
+    float vabs = length(v);
+    return vec4(expA * cos(vabs), expA * (v / vabs * sin(vabs)));
+}
 vec4 qpow(vec4 c, float p) {
     vec4 sum = c;
     for (int i = 1; i < p; i++) {
@@ -49,7 +68,6 @@ vec4 qpow(vec4 c, float p) {
     }
     return sum;
 }
-
 
 //------------------------------------------------
 float julia(in vec3 pos) {
@@ -66,22 +84,25 @@ vec4 qFunctionNewton(vec4 q) {
     return q-qmul(vec4(1,0,1,0),qdiv(qpow(q,n)-vec4(1,0,0,0),n*qpow(q,n-1)));
 }
 
-vec4 qFunctionJula(vec4 q, vec3 c) {
-    return qmul(vec4(1,0,1,0), qmul(q, q)) + vec4(c,0);
+// Function placeholder (name javaFunction(z))
+vec4 javaFunction(vec4 q, vec4 c) {
+    return /**/qsin(q);
 }
 
-float function2(in vec3 c) {
+
+float NewtonMethod(in vec3 c) {
     vec4 z = vec4(c, 0);
     vec4 zNudge = z + z * 0.001;
     for (int iteration = 0; iteration < 100; iteration++) {
-        z = qFunctionNewton(z);
-        zNudge = qFunctionNewton(zNudge);
+        z = javaFunction(z, vec4(c,0));
+        zNudge = javaFunction(zNudge, vec4(c,0));
         if (length(z - zNudge) > 1.0) {
             return 0.0;
         }
     }
     return 1.0;
 }
+
 
 
 vec3 calculateNormal(in vec3 p)
@@ -94,9 +115,9 @@ vec3 calculateNormal(in vec3 p)
     float gradient_z = 0;
     for (int i = 0; i < normalPrecision; i++) {
         small_step += vec3(0.001, 0.0, 0.0) * range;
-        gradient_x += function2(p + small_step.xyy) - function2(p - small_step.xyy);
-        gradient_y += function2(p + small_step.yxy) - function2(p - small_step.yxy);
-        gradient_z += function2(p + small_step.yyx) - function2(p - small_step.yyx);
+        gradient_x += NewtonMethod(p + small_step.xyy) - NewtonMethod(p - small_step.xyy);
+        gradient_y += NewtonMethod(p + small_step.yxy) - NewtonMethod(p - small_step.yxy);
+        gradient_z += NewtonMethod(p + small_step.yyx) - NewtonMethod(p - small_step.yyx);
     }
     vec3 normal = vec3(gradient_x / normalPrecision, gradient_y / normalPrecision, gradient_z / normalPrecision);
 
@@ -111,7 +132,7 @@ void main() {
     ivec3 gridIndex = ivec3(gl_GlobalInvocationID);
     vec3 pos = (vec3(gridIndex) / float(gridDensity)) - vec3(range);
 
-    if (function2(pos) > 0 ) return;
+    if (NewtonMethod(pos) > 0 ) return;
 
     uint currentIndex = atomicAdd(globalIndex, 1);
     if (currentIndex < vertexArrayLength) {
