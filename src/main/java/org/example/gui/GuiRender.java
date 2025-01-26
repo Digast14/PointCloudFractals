@@ -5,7 +5,7 @@ import imgui.ImGuiIO;
 import imgui.flag.ImGuiConfigFlags;
 import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
-import org.example.scene.Window;
+import org.example.Window;
 import org.lwjgl.glfw.GLFW;
 
 public class GuiRender {

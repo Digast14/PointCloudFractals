@@ -1,4 +1,4 @@
-package org.example.scene;
+package org.example.render.shader;
 
 import org.joml.*;
 import org.lwjgl.system.MemoryStack;

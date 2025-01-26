@@ -1,7 +1,7 @@
 package org.example;
 
+import org.example.render.WorldRender;
 import org.example.scene.Camera;
-import org.example.scene.Window;
 
 import static org.lwjgl.glfw.GLFW.*;
 

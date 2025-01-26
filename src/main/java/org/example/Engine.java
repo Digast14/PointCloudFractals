@@ -4,7 +4,7 @@ package org.example;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import org.example.gui.GuiLayer;
-import org.example.scene.Window;
+import org.example.render.WorldRender;
 
 import static org.lwjgl.glfw.GLFW.*;
 

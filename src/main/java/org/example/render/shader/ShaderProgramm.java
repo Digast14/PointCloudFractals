@@ -1,4 +1,4 @@
-package org.example.scene;
+package org.example.render.shader;
 
 import java.io.IOException;
 import java.nio.file.Files;

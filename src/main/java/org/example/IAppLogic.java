@@ -1,6 +1,6 @@
 package org.example;
 
-import org.example.scene.Window;
+import org.example.render.WorldRender;
 
 public interface IAppLogic {
 

@@ -1,8 +1,9 @@
-package org.example.scene;
+package org.example.render;
 
 import org.example.gui.GuiLayer;
-
-import java.sql.SQLOutput;
+import org.example.scene.Camera;
+import org.example.render.shader.ShaderProgramm;
+import org.example.render.shader.UniformsMap;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
@@ -12,7 +13,7 @@ import static org.lwjgl.opengl.GL42.glMemoryBarrier;
 import static org.lwjgl.opengl.GL43.*;
 import static org.lwjgl.opengl.GL43.GL_SHADER_STORAGE_BARRIER_BIT;
 
-public class SceneRender {
+public class PointCloudRender {
 
     private ShaderProgramm shaderProgram;
     private ShaderProgramm computeShaderProgram;
@@ -29,7 +30,7 @@ public class SceneRender {
 
     private UniformsMap uniformsMap;
 
-    public SceneRender(SceneSettings sceneSettings){
+    public PointCloudRender(SceneSettings sceneSettings){
         workGroupDimension = sceneSettings.workGroupDimension;
         totalThreadDimension = workGroupDimension * sceneSettings.threadDimension;
         totalThreads = totalThreadDimension * totalThreadDimension * totalThreadDimension;

@@ -1,4 +1,4 @@
-package org.example.scene;
+package org.example;
 
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.tinylog.Logger;

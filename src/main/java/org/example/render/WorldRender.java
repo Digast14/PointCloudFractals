@@ -1,11 +1,10 @@
-package org.example;
+package org.example.render;
 
 
+import org.example.Window;
 import org.example.gui.GuiLayer;
 import org.example.gui.GuiRender;
 import org.example.scene.Camera;
-import org.example.scene.SceneRender;
-import org.example.scene.Window;
 import org.lwjgl.opengl.GL;
 
 
@@ -15,7 +14,7 @@ public class WorldRender {
 
     private final Camera camera;
     private final GuiRender guiRender;
-    private final SceneRender sceneRender;
+    private final PointCloudRender pointCloudRender;
     private final FractalRender fractalRender;
 
 
@@ -26,7 +25,7 @@ public class WorldRender {
         glCullFace(GL_BACK);
         camera = new Camera(window.getWidth(), window.getHeight());
         guiRender = new GuiRender(window);
-        sceneRender = new SceneRender( new SceneRender.SceneSettings());
+        pointCloudRender = new PointCloudRender( new PointCloudRender.SceneSettings());
         fractalRender = new FractalRender();
     }
 
@@ -45,7 +44,7 @@ public class WorldRender {
         }
 
         if (guiLayer.local3dFractal) {
-            sceneRender.render(camera, guiLayer);
+            pointCloudRender.render(camera, guiLayer);
         }else {
             fractalRender.render(camera, guiLayer, window);
         }
@@ -59,7 +58,7 @@ public class WorldRender {
 
 
     public void cleanup() {
-        sceneRender.cleanup();
+        pointCloudRender.cleanup();
         fractalRender.cleanup();
     }
 }

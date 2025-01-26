@@ -1,10 +1,10 @@
-package org.example;
+package org.example.render;
 
+import org.example.Window;
 import org.example.gui.GuiLayer;
 import org.example.scene.Camera;
-import org.example.scene.ShaderProgramm;
-import org.example.scene.UniformsMap;
-import org.example.scene.Window;
+import org.example.render.shader.ShaderProgramm;
+import org.example.render.shader.UniformsMap;
 import org.joml.Vector2f;
 
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
