@@ -13,10 +13,6 @@ public class Main implements IAppLogic{
         gameEngine.run();
     }
 
-    @Override
-    public void cleanup() {
-        //nothing to clean up yet
-    }
 
     private static double xPos;
     private static double yPos;
@@ -59,5 +55,10 @@ public class Main implements IAppLogic{
     @Override
     public void update(Window window, WorldRender render) {
         //nothing to update yet
+    }
+
+    @Override
+    public void cleanup() {
+        //nothing to clean up yet
     }
 }

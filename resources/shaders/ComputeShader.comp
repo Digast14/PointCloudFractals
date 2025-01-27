@@ -18,6 +18,17 @@ uniform int gridDensity;
 uniform float range;
 
 
+uniform float timeSin;
+uniform int u_qZeroC;
+uniform vec4 u_qZero;
+uniform int u_maxIteration;
+uniform float u_nudgeValue;
+uniform float u_breakoutFactor;
+uniform int u_reverse;
+
+
+
+
 //math function
 vec4 qmul(in vec4 a, in vec4 b) {
     return vec4(
@@ -91,16 +102,24 @@ vec4 javaFunction(vec4 q, vec4 c) {
 
 
 float NewtonMethod(in vec3 c) {
-    vec4 z = vec4(c, 0);
-    vec4 zNudge = z + z * 0.001;
-    for (int iteration = 0; iteration < 100; iteration++) {
+    vec4 z;
+    vec4 zNudge;
+    if (u_qZeroC == 0) {
+        z = vec4(c,0);
+        zNudge = z + z * u_nudgeValue;
+    } else {
+        z = u_qZero;
+        zNudge = u_qZero;
+    }
+
+    for (int iteration = 0; iteration < u_maxIteration; iteration++) {
         z = javaFunction(z, vec4(c,0));
         zNudge = javaFunction(zNudge, vec4(c,0));
-        if (length(z - zNudge) > 1.0) {
-            return 0.0;
+        if (length(z - zNudge) > 1.0  && (iteration > u_maxIteration * u_breakoutFactor)) {
+            return abs(u_reverse);
         }
     }
-    return 1.0;
+    return abs(u_reverse-1);
 }
 
 
