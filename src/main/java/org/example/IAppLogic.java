@@ -1,5 +1,6 @@
 package org.example;
 
+import org.example.gui.GuiLayer;
 import org.example.render.WorldRender;
 
 public interface IAppLogic {

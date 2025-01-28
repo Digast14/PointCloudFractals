@@ -26,9 +26,10 @@ uniform float u_nudgeValue;
 uniform float u_breakoutFactor;
 uniform int u_reverse;
 uniform float u_normalPrecision;
+uniform int u_power;
 
 
-
+int n = u_power;
 
 //math function
 vec4 qmul(in vec4 a, in vec4 b) {
@@ -38,6 +39,14 @@ vec4 qmul(in vec4 a, in vec4 b) {
     a.x * b.z - a.y * b.w + a.z * b.x + a.w * b.y,
     a.x * b.w + a.y * b.z - a.z * b.y + a.w * b.x
     );
+}
+
+vec4 qmul(in vec4 a, in float b) {
+    return vec4(a.x*b, a.y*b, a.z*b, a.w*b);
+}
+
+vec4 qmul(in float b, in vec4 a) {
+    return vec4(a.x*b, a.y*b, a.z*b, a.w*b);
 }
 
 vec4 qdiv(in vec4 a, in vec4 b) {
@@ -74,6 +83,7 @@ vec4 qexp(vec4 q) {
     return vec4(expA * cos(vabs), expA * (v / vabs * sin(vabs)));
 }
 vec4 qpow(vec4 c, float p) {
+    if(p==0) return vec4(1,0,0,0);
     vec4 sum = c;
     for (int i = 1; i < p; i++) {
         sum = qmul(sum, c);
@@ -91,7 +101,7 @@ float julia(in vec3 pos) {
     return 1.0;
 }
 
-int n = 3;
+
 vec4 qFunctionNewton(vec4 q) {
     return q - qmul(vec4(1, 0, 1, 0), qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n * qpow(q, n - 1)));
 }
@@ -151,14 +161,8 @@ void main() {
     ivec3 gridIndex = ivec3(gl_GlobalInvocationID);
     vec3 pos = (vec3(gridIndex) / float(gridDensity)) - vec3(range);
 
-    /*
-    uint currentIndex = atomicAdd(globalIndex, 1);
-    vertices[currentIndex + 1] = vec4(pos, 1.0);
-    normals[currentIndex + 1] = vec3(pos);
-*/
 
-    float result = NewtonMethod(pos);
-    if (result > 0 ){
+    if(NewtonMethod(pos)>0){
         return;
     }else{
         uint currentIndex = atomicAdd(globalIndex, 1);

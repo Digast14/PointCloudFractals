@@ -99,19 +99,23 @@ public class GuiLayer {
     public float range = 1;
 
     //normalPrecision
-    private final ImInt normalPrecisionStart = new ImInt(10);
-    public int normalPrecision = 10;
+    private final ImInt normalPrecisionStart = new ImInt(20);
+    public int normalPrecision = 20;
 
     //quadSize
-    private final ImInt quadSizeStart = new ImInt(4);
+    private final int[] quadSizeStart = {4};
     public int quadSize = 4;
 
     //quadSize
-    private final ImInt workGroupDimensionStart = new ImInt(4);
-    public int workGroupDimension = 4;
+    private final ImInt workGroupDimensionStart = new ImInt(16);
+    public int workGroupDimension = 16;
 
     //Reverse
     public int reverse = 0;
+
+    //power level
+    private final int[] powerStart = {2};
+    public int power = 2;
 
 
     public void gui() {
@@ -154,6 +158,10 @@ public class GuiLayer {
 
         if (ImGui.sliderFloat("change t parameter", startFloat, -1.0f, 1.0f)) {
             time = startFloat[0];
+        }
+
+        if (ImGui.sliderInt("power n", powerStart,0, 10)) {
+            power = powerStart[0];
         }
 
         if (!local3dFractal) {
@@ -203,17 +211,18 @@ public class GuiLayer {
                     if (ImGui.inputFloat("Range", FractalRange)) {
                         range = FractalRange.floatValue();
                     }
-                    if (ImGui.button("invert")) {
-                        reverse = (reverse + 1) % 2;
-                    }
+
                     if (ImGui.inputInt("normal Precision", normalPrecisionStart)) {
                         normalPrecision = normalPrecisionStart.intValue();
                     }
-                    if (ImGui.inputInt("Quadsize", quadSizeStart)) {
-                        quadSize = quadSizeStart.intValue();
+                    if (ImGui.sliderInt("Quadsize", quadSizeStart, 1, 15)) {
+                        quadSize = quadSizeStart[0];
                     }
                     if (ImGui.inputInt("Resolution\nRecommend: (16-24)", workGroupDimensionStart)) {
                         workGroupDimension = workGroupDimensionStart.intValue();
+                    }
+                    if (ImGui.button("invert")) {
+                        reverse = (reverse + 1) % 2;
                     }
                 }
             } else {

@@ -27,26 +27,22 @@ public class Engine {
 
         this.appLogic = appLogic;
         appLogic.init(window, render);
-
     }
 
-    private void resize() {
-        int width = window.getWidth();
-        int height = window.getHeight();
-        render.resize(width,height);
-    }
 
 
     public void run(){
-        double frameRate = 1.0d / 30.0d;
+        int maxFPS = 60; //FPS th game aims for;
+        double frameRate = 1.0d / (double) maxFPS;
         double previous = glfwGetTime();
         double steps = 0.0;
 
-        render.getPointCloudRender().initShaders(guiLayer);
+        init();
 
         while (!glfwWindowShouldClose(window.getWindowPointer())) {
             glfwPollEvents();
 
+            //Manages FPS to be constant
             double current = glfwGetTime();
             double elapsed = current - previous;
             previous = current;
@@ -55,11 +51,7 @@ public class Engine {
                 steps -= frameRate;
             }
 
-            ImGuiIO imGuiIO = ImGui.getIO();
-            if(!(imGuiIO.getWantCaptureMouse() || imGuiIO.getWantCaptureKeyboard())){
-                appLogic.input(window, render);
-            }
-
+            appLogic.input(window, render);
             appLogic.update(window, render);
             render.update(guiLayer);
             render.render(guiLayer, window);
@@ -71,6 +63,22 @@ public class Engine {
         cleanup();
     }
 
+    private void init(){
+        render.getPointCloudRender().initShaders(guiLayer);
+    }
+
+    private void resize() {
+        int width = window.getWidth();
+        int height = window.getHeight();
+        render.resize(width,height);
+    }
+
+
+    private void cleanup() {
+        appLogic.cleanup();
+        render.cleanup();
+        window.cleanup();
+    }
 
     private static void sync(double loopStartTime) {
         float loopSlot = 1f / 50;
@@ -81,12 +89,5 @@ public class Engine {
             } catch (InterruptedException _) {
             }
         }
-    }
-
-
-    private void cleanup() {
-        appLogic.cleanup();
-        render.cleanup();
-        window.cleanup();
     }
 }

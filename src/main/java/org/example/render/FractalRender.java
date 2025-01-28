@@ -101,6 +101,8 @@ public class FractalRender {
         uniformsMap.createUniform("u_qZeroC");
         uniformsMap.createUniform("u_qZero");
         uniformsMap.createUniform("u_polynomialDegree");
+        uniformsMap.createUniform("u_power");
+
     }
 
 
@@ -126,6 +128,7 @@ public class FractalRender {
         uniformsMap.setUniform("u_qZeroC", guiLayer.qZeroC);
         uniformsMap.setUniform("u_qZero", guiLayer.qZero);
         uniformsMap.setUniform("u_polynomialDegree", guiLayer.polynomialDegree);
+        uniformsMap.setUniform("u_power", guiLayer.power);
 
         if (guiLayer.gameMode) {
             uniformsMap.setUniform("u_gameMode", 1);

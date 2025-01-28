@@ -7,17 +7,18 @@ import org.example.gui.GuiRender;
 import org.example.scene.Camera;
 import org.lwjgl.opengl.GL;
 
-
-
 import static org.lwjgl.opengl.GL11.*;
 
 public class WorldRender {
 
     private final Camera camera;
     private final GuiRender guiRender;
-    private  PointCloudRender pointCloudRender;
+    private PointCloudRender pointCloudRender;
+
     private final FractalRender fractalRender;
     private final PointCloudRender.SceneSettings pointCloudSettings;
+
+
 
 
     public WorldRender(Window window) {
@@ -32,6 +33,8 @@ public class WorldRender {
         fractalRender = new FractalRender();
         pointCloudRender = new PointCloudRender(pointCloudSettings);
 
+
+
     }
 
     public void resize(int resX, int resY) {
@@ -39,16 +42,18 @@ public class WorldRender {
     }
 
 
-    public void update(GuiLayer guiLayer){
+    public void update(GuiLayer guiLayer) {
         updatePointCloudSettings(guiLayer);
-        if(guiLayer.newFunction && guiLayer.local3dFractal){
+
+        if (guiLayer.newFunction && guiLayer.local3dFractal) {
             pointCloudRender.cleanup();
-            pointCloudRender = new PointCloudRender(pointCloudSettings);;
+            pointCloudRender = new PointCloudRender(pointCloudSettings);
             pointCloudRender.initShaders(guiLayer);
+
         }
 
-        if(guiLayer.local3dFractalChangeMode){
-            camera.setPosition(0.0F,0.0F,0.0F);
+        if (guiLayer.local3dFractalChangeMode) {
+            camera.setPosition(0.0F, 0.0F, 0.0F);
             camera.setSpeed(1);
         }
     }
@@ -57,7 +62,7 @@ public class WorldRender {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, window.getWidth(), window.getHeight());
 
-        if (guiLayer.local3dFractal) pointCloudRender.render(camera);
+        if (guiLayer.local3dFractal) pointCloudRender.render(guiLayer, camera);
         else fractalRender.render(camera, guiLayer, window);
 
         guiRender.render(guiLayer);
@@ -69,8 +74,9 @@ public class WorldRender {
     }
 
 
-    private void updatePointCloudSettings(GuiLayer guiLayer){
-        pointCloudSettings.quadSize = guiLayer.quadSize;
+
+
+    private void updatePointCloudSettings(GuiLayer guiLayer) {
         pointCloudSettings.range = guiLayer.range;
         pointCloudSettings.workGroupDimension = guiLayer.workGroupDimension;
     }
@@ -79,9 +85,10 @@ public class WorldRender {
         return camera;
     }
 
-    public PointCloudRender getPointCloudRender(){
+    public PointCloudRender getPointCloudRender() {
         return pointCloudRender;
     }
+
 
     public void cleanup() {
         pointCloudRender.cleanup();

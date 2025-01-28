@@ -113,8 +113,17 @@ public class FunctionMakerGLSL {
         String functionCopy = function + "$";
         boolean isPower = false;
         String longToken = "";
+        boolean needCloseParanthesis = false;
 
         while (!functionCopy.isEmpty()) {
+            if (needCloseParanthesis) {
+                while (functionCopy.charAt(0) != ')') {
+                    longToken = longToken + functionCopy.charAt(0);
+                    functionCopy = functionCopy.substring(1);
+                }
+                tokenStack.push(longToken);
+                needCloseParanthesis = false;
+            }
 
             if (functionCopy.charAt(0) >= '0' && functionCopy.charAt(0) <= '9' || functionCopy.charAt(0) == '.' || functionCopy.charAt(0) == 't') {
                 if (functionCopy.charAt(0) == 't') {
@@ -127,7 +136,9 @@ public class FunctionMakerGLSL {
                 }
                 if (!isPower) {
                     longToken = "vec4(" + longToken + ",0,0,0)";
-                }else highestPolynomial = Math.max(highestPolynomial, Integer.parseInt(longToken));
+                } else {
+                    highestPolynomial = Math.max(highestPolynomial, Integer.parseInt(longToken));
+                }
                 tokenStack.push(longToken);
                 longToken = "";
             } else if (functionCopy.startsWith("quant(")) {
@@ -151,14 +162,20 @@ public class FunctionMakerGLSL {
                 if (functionCopy.startsWith("abs")) tokenStack.push("abs");
                 functionCopy = functionCopy.substring(3);
             } else {
-                isPower = false;
+                if (isPower && functionCopy.charAt(0) == '(') {
+                    needCloseParanthesis = true;
+                } else {
+                    isPower = false;
+                }
                 longToken = "";
                 if (functionCopy.charAt(0) == '-' && (tokenStack.isEmpty() || (tokenStack.peek().charAt(0) == '_' && tokenStack.peek().length() > 2))) {
                     longToken = "-";
-                } else if (functionCopy.charAt(0) >= 'q') {
+                } else if (functionCopy.charAt(0) == 'q') {
                     tokenStack.push("q");
-                } else if (functionCopy.charAt(0) >= 'c') {
+                } else if (functionCopy.charAt(0) == 'c') {
                     tokenStack.push("c");
+                } else if (functionCopy.charAt(0) == 'n') {
+                    tokenStack.push("n");
                 } else switch (functionCopy.charAt(0)) {
                     case '+' -> tokenStack.push("_plus");
                     case '-' -> tokenStack.push("_minus");

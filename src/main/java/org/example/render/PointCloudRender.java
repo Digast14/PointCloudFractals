@@ -5,6 +5,12 @@ import org.example.scene.Camera;
 import org.example.render.shader.ShaderProgramm;
 import org.example.render.shader.UniformsMap;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+
+import static org.lwjgl.opengl.GL15.glBufferSubData;
 import static org.lwjgl.opengl.GL43.*;
 
 public class PointCloudRender {
@@ -20,7 +26,6 @@ public class PointCloudRender {
     private final int workGroupDimension;
     private final int totalThreadDimension;
     private final int totalThreads;
-    private final int quadSize;
 
     private UniformsMap uniformsMap;
 
@@ -29,7 +34,6 @@ public class PointCloudRender {
         totalThreadDimension = workGroupDimension * sceneSettings.threadDimension;
         totalThreads = totalThreadDimension * totalThreadDimension * totalThreadDimension;
         range = sceneSettings.range;
-        quadSize = sceneSettings.quadSize;
     }
 
 
@@ -60,6 +64,12 @@ public class PointCloudRender {
         globalIndexBuffer = glGenBuffers();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalIndexBuffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, 32, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalIndexBuffer);
+
+        ByteBuffer buffer = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder());
+        buffer.putInt(0).flip();
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, buffer);
+
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, globalIndexBuffer);
     }
 
@@ -79,7 +89,7 @@ public class PointCloudRender {
         glUniform1f(glGetUniformLocation(id, "u_breakoutFactor"), guiLayer.breakOutFactor);
         glUniform1i(glGetUniformLocation(id, "u_reverse"), guiLayer.reverse);
         glUniform1f(glGetUniformLocation(id, "u_normalPrecision"), guiLayer.normalPrecision);
-
+        glUniform1i(glGetUniformLocation(id, "u_power"), guiLayer.power);
 
         System.out.println(workGroupDimension);
         System.out.println(totalThreadDimension);
@@ -88,7 +98,6 @@ public class PointCloudRender {
         glDispatchCompute(workGroupDimension, workGroupDimension, workGroupDimension);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
-        glFinish();
         computeShaderProgram.cleanup();
     }
 
@@ -100,15 +109,14 @@ public class PointCloudRender {
 
         glBindBuffer(GL_ARRAY_BUFFER, ssbo);
 
-        glPointSize(quadSize);
-
         shaderProgram.unbind();
     }
 
 
-    public void render(Camera camera) {
+    public void render(GuiLayer guiLayer, Camera camera) {
         shaderProgram.bind();
         parseUniform(camera);
+        glPointSize(guiLayer.quadSize);
         glDrawArrays(GL_POINTS, 0, totalThreads);
         shaderProgram.unbind();
     }
@@ -116,6 +124,7 @@ public class PointCloudRender {
     private void parseUniform(Camera camera) {
         uniformsMap.setUniform("projection", camera.getProjectionMatrix());
         uniformsMap.setUniform("view", camera.getViewMatrix());
+
     }
 
     public void cleanup() {
@@ -127,8 +136,7 @@ public class PointCloudRender {
 
     public static class SceneSettings {
         public float range = 1f;
-        public int workGroupDimension = 4;
+        public int workGroupDimension = 16;
         public int threadDimension = 10;
-        public int quadSize = 5;
     }
 }

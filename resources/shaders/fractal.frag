@@ -25,6 +25,9 @@ uniform float u_stepSize;
 uniform float u_stepSizeMult;
 uniform float u_zCutoff;
 uniform float u_time;
+uniform int u_power;
+
+int n = u_power;
 
 out vec4 fragColor;
 
@@ -55,6 +58,14 @@ vec4 qmul(in vec4 a, in vec4 b) {
     a.x * b.z - a.y * b.w + a.z * b.x + a.w * b.y,
     a.x * b.w + a.y * b.z - a.z * b.y + a.w * b.x
     );
+}
+
+vec4 qmul(in vec4 a, in float b) {
+    return vec4(a.x*b, a.y*b, a.z*b, a.w*b);
+}
+
+vec4 qmul(in float b, in vec4 a) {
+    return vec4(a.x*b, a.y*b, a.z*b, a.w*b);
 }
 
 vec4 qdiv(in vec4 a, in vec4 b) {
@@ -100,11 +111,11 @@ vec4 qpow(vec4 c, float p) {
 
 
 //Polynomial degree
-const float n = 3;
+const float roootN = 3;
 
 // Function to calculate roots of unity (ony for standard Newton Fractals)
-vec4 roots[int(n)];
-void calculateRootsOfUnity(int m, out vec4 roots[int(n)]) {
+vec4 roots[int(roootN)];
+void calculateRootsOfUnity(int m, out vec4 roots[int(roootN)]) {
     for (int i = 0; i < m; i++) {
         float angle = 2.0 * PI * float(i) / float(m);
         roots[i] = vec4(cos(angle), sin(angle), 0, 0);
@@ -158,7 +169,7 @@ vec3 NewtonFractalQuaternion(in vec4 c) {
     int maxIteration = 200;
     for (int iteration = 0; iteration < maxIteration; iteration++) {
         z = javaFunction(z, c);
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < roootN; i++) {
             if (length(z - roots[i]) < tolerance) {
                 return colors[i] * (1 - iteration / float(maxIteration));
             }
@@ -241,7 +252,7 @@ vec3 rotateByVec3(in vec3 vector, in vec3 axis, in float angle) {
 
 
 void main() {
-    calculateRootsOfUnity(int(n), roots);
+    calculateRootsOfUnity(int(roootN), roots);
 
     float aspectRatio = u_resolution.x / u_resolution.y;
     vec2 uv = vec2(((gl_FragCoord.x / u_resolution.y) - (aspectRatio) * 0.5), ((gl_FragCoord.y / u_resolution.y) - 0.5));
