@@ -8,6 +8,7 @@ import org.example.scene.Camera;
 import org.lwjgl.opengl.GL;
 
 
+
 import static org.lwjgl.opengl.GL11.*;
 
 public class WorldRender {
@@ -16,6 +17,7 @@ public class WorldRender {
     private final GuiRender guiRender;
     private  PointCloudRender pointCloudRender;
     private final FractalRender fractalRender;
+    private final PointCloudRender.SceneSettings pointCloudSettings;
 
 
     public WorldRender(Window window) {
@@ -23,10 +25,12 @@ public class WorldRender {
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
+
+        pointCloudSettings = new PointCloudRender.SceneSettings();
         camera = new Camera(window.getWidth(), window.getHeight());
         guiRender = new GuiRender(window);
         fractalRender = new FractalRender();
-        pointCloudRender = new PointCloudRender( new PointCloudRender.SceneSettings());
+        pointCloudRender = new PointCloudRender(pointCloudSettings);
 
     }
 
@@ -35,14 +39,11 @@ public class WorldRender {
     }
 
 
-
-    public void render(GuiLayer guiLayer, Window window) {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glViewport(0, 0, window.getWidth(), window.getHeight());
-
+    public void update(GuiLayer guiLayer){
+        updatePointCloudSettings(guiLayer);
         if(guiLayer.newFunction && guiLayer.local3dFractal){
             pointCloudRender.cleanup();
-            pointCloudRender = new PointCloudRender( new PointCloudRender.SceneSettings());
+            pointCloudRender = new PointCloudRender(pointCloudSettings);;
             pointCloudRender.initShaders(guiLayer);
         }
 
@@ -50,16 +51,29 @@ public class WorldRender {
             camera.setPosition(0.0F,0.0F,0.0F);
             camera.setSpeed(1);
         }
+    }
 
+    public void render(GuiLayer guiLayer, Window window) {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glViewport(0, 0, window.getWidth(), window.getHeight());
 
         if (guiLayer.local3dFractal) pointCloudRender.render(camera);
         else fractalRender.render(camera, guiLayer, window);
 
-
-
         guiRender.render(guiLayer);
+
+        int error = glGetError();
+        if (error != GL_NO_ERROR) {
+            System.err.println("OpenGL Error: " + error);
+        }
     }
 
+
+    private void updatePointCloudSettings(GuiLayer guiLayer){
+        pointCloudSettings.quadSize = guiLayer.quadSize;
+        pointCloudSettings.range = guiLayer.range;
+        pointCloudSettings.workGroupDimension = guiLayer.workGroupDimension;
+    }
 
     public Camera getCamera() {
         return camera;
@@ -68,7 +82,6 @@ public class WorldRender {
     public PointCloudRender getPointCloudRender(){
         return pointCloudRender;
     }
-
 
     public void cleanup() {
         pointCloudRender.cleanup();

@@ -16,7 +16,7 @@ public class Window {
 
     private int resX;
     private int resY;
-    private Callable<Void> resizeFunc;
+    private final Callable<Void> resizeFunc;
 
     public Window(String title, int resX, int resY, Callable<Void> resizeFunc) {
         this.resizeFunc = resizeFunc;
@@ -51,7 +51,6 @@ public class Window {
     protected void resized(int width, int height) {
         resX = width;
         resY = height;
-        System.out.println("resize!");
         try {
             resizeFunc.call();
         } catch (Exception excp) {

@@ -25,6 +25,7 @@ uniform int u_maxIteration;
 uniform float u_nudgeValue;
 uniform float u_breakoutFactor;
 uniform int u_reverse;
+uniform float u_normalPrecision;
 
 
 
@@ -92,7 +93,7 @@ float julia(in vec3 pos) {
 
 int n = 3;
 vec4 qFunctionNewton(vec4 q) {
-    return q-qmul(vec4(1,0,1,0),qdiv(qpow(q,n)-vec4(1,0,0,0),n*qpow(q,n-1)));
+    return q - qmul(vec4(1, 0, 1, 0), qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n * qpow(q, n - 1)));
 }
 
 // Function placeholder (name javaFunction(z))
@@ -105,7 +106,7 @@ float NewtonMethod(in vec3 c) {
     vec4 z;
     vec4 zNudge;
     if (u_qZeroC == 0) {
-        z = vec4(c,0);
+        z = vec4(c, 0);
         zNudge = z + z * u_nudgeValue;
     } else {
         z = u_qZero;
@@ -113,13 +114,13 @@ float NewtonMethod(in vec3 c) {
     }
 
     for (int iteration = 0; iteration < u_maxIteration; iteration++) {
-        z = javaFunction(z, vec4(c,0));
-        zNudge = javaFunction(zNudge, vec4(c,0));
-        if (length(z - zNudge) > 1.0  && (iteration > u_maxIteration * u_breakoutFactor)) {
+        z = javaFunction(z, vec4(c, 0));
+        zNudge = javaFunction(zNudge, vec4(c, 0) + vec4(c, 0) * u_nudgeValue);
+        if (length(z - zNudge) > 1.0 && (iteration > u_maxIteration * u_breakoutFactor)) {
             return abs(u_reverse);
         }
     }
-    return abs(u_reverse-1);
+    return abs(u_reverse - 1);
 }
 
 
@@ -127,18 +128,17 @@ float NewtonMethod(in vec3 c) {
 vec3 calculateNormal(in vec3 p)
 {
     vec3 small_step = vec3(0.0);
-    float normalPrecision = 20;
 
     float gradient_x = 0;
     float gradient_y = 0;
     float gradient_z = 0;
-    for (int i = 0; i < normalPrecision; i++) {
+    for (int i = 0; i < u_normalPrecision; i++) {
         small_step += vec3(0.001, 0.0, 0.0) * range;
         gradient_x += NewtonMethod(p + small_step.xyy) - NewtonMethod(p - small_step.xyy);
         gradient_y += NewtonMethod(p + small_step.yxy) - NewtonMethod(p - small_step.yxy);
         gradient_z += NewtonMethod(p + small_step.yyx) - NewtonMethod(p - small_step.yyx);
     }
-    vec3 normal = vec3(gradient_x / normalPrecision, gradient_y / normalPrecision, gradient_z / normalPrecision);
+    vec3 normal = vec3(gradient_x / u_normalPrecision, gradient_y / u_normalPrecision, gradient_z / u_normalPrecision);
 
     if (dot(normal, normal) == 0) normal = vec3(0.1);
     else normalize(normal);
@@ -151,11 +151,20 @@ void main() {
     ivec3 gridIndex = ivec3(gl_GlobalInvocationID);
     vec3 pos = (vec3(gridIndex) / float(gridDensity)) - vec3(range);
 
-    if (NewtonMethod(pos) > 0 ) return;
-
+    /*
     uint currentIndex = atomicAdd(globalIndex, 1);
-    if (currentIndex < vertexArrayLength) {
-        vertices[currentIndex + 1] = vec4(pos, 1.0);
-        normals[currentIndex + 1] = calculateNormal(pos);
+    vertices[currentIndex + 1] = vec4(pos, 1.0);
+    normals[currentIndex + 1] = vec3(pos);
+*/
+
+    float result = NewtonMethod(pos);
+    if (result > 0 ){
+        return;
+    }else{
+        uint currentIndex = atomicAdd(globalIndex, 1);
+        if (currentIndex < vertexArrayLength) {
+            vertices[currentIndex + 1] = vec4(pos, 1.0);
+            normals[currentIndex + 1] = calculateNormal(pos);
+        }
     }
 }

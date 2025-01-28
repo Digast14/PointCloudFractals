@@ -7,7 +7,6 @@ import org.example.gui.GuiLayer;
 import org.example.render.WorldRender;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL20.glUseProgram;
 
 public class Engine {
 
@@ -57,10 +56,12 @@ public class Engine {
             }
 
             ImGuiIO imGuiIO = ImGui.getIO();
-            if(!imGuiIO.getWantCaptureMouse() || !imGuiIO.getWantCaptureKeyboard()){
+            if(!(imGuiIO.getWantCaptureMouse() || imGuiIO.getWantCaptureKeyboard())){
                 appLogic.input(window, render);
             }
+
             appLogic.update(window, render);
+            render.update(guiLayer);
             render.render(guiLayer, window);
 
             sync(current);

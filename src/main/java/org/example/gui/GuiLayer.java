@@ -62,11 +62,11 @@ public class GuiLayer {
     //Shader Settings Depend on Mode
     //Global
     //max Iteration
-    private final ImInt maxIterationStart = new ImInt();
+    private final ImInt maxIterationStart = new ImInt(50);
     public int maxIteration = 50;
 
     //Nudge Value
-    private final ImFloat nudgeValueStart = new ImFloat();
+    private final ImFloat nudgeValueStart = new ImFloat(0.0001f);
     public float nudgeValue = 0.0001f;
 
     //Only 2D
@@ -76,15 +76,15 @@ public class GuiLayer {
 
     //Only Ray marching
     //Max Iteration Range
-    private final ImInt maxIterationStartRange = new ImInt();
+    private final ImInt maxIterationStartRange = new ImInt(200);
     public int maxIterationRange = 200;
 
     //step Size
-    private final ImFloat stepSizeStart = new ImFloat();
+    private final ImFloat stepSizeStart = new ImFloat(0.025f);
     public float stepSize = 0.025f;
 
     //step Size multiplier
-    private final ImFloat stepSizeMultStart = new ImFloat();
+    private final ImFloat stepSizeMultStart = new ImFloat(0.001f);
     public float stepSizeMult = 0.001f;
 
     //Add Z cutoff
@@ -97,6 +97,18 @@ public class GuiLayer {
     //Range
     private final ImFloat FractalRange = new ImFloat(1);
     public float range = 1;
+
+    //normalPrecision
+    private final ImInt normalPrecisionStart = new ImInt(10);
+    public int normalPrecision = 10;
+
+    //quadSize
+    private final ImInt quadSizeStart = new ImInt(4);
+    public int quadSize = 4;
+
+    //quadSize
+    private final ImInt workGroupDimensionStart = new ImInt(4);
+    public int workGroupDimension = 4;
 
     //Reverse
     public int reverse = 0;
@@ -148,6 +160,11 @@ public class GuiLayer {
             if (ImGui.checkbox("timerAuto", autoT)) {
                 autoT = !autoT;
             }
+
+            if (ImGui.checkbox("Raymarching", gameMode)) {
+                gameMode = !gameMode;
+            }
+
             if (autoT) {
                 if (ImGui.sliderFloat("change speed", startFloatSpeed, 0.0f, 10.0f)) {
                     speed = startFloatSpeed[0] * 0.001;
@@ -188,6 +205,15 @@ public class GuiLayer {
                     }
                     if (ImGui.button("invert")) {
                         reverse = (reverse + 1) % 2;
+                    }
+                    if (ImGui.inputInt("normal Precision", normalPrecisionStart)) {
+                        normalPrecision = normalPrecisionStart.intValue();
+                    }
+                    if (ImGui.inputInt("Quadsize", quadSizeStart)) {
+                        quadSize = quadSizeStart.intValue();
+                    }
+                    if (ImGui.inputInt("Resolution\nRecommend: (16-24)", workGroupDimensionStart)) {
+                        workGroupDimension = workGroupDimensionStart.intValue();
                     }
                 }
             } else {
