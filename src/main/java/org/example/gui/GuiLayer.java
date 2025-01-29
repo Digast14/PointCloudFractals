@@ -58,7 +58,7 @@ public class GuiLayer {
     public Vector3f color2 = new Vector3f(1.0f, 1.0f, 1.0f);
     public Vector3f color3 = new Vector3f(0.0f, 0.0f, 0.0f);
 
-
+    //-----------------------------------------------------------------------
     //Shader Settings Depend on Mode
     //Global
     //max Iteration
@@ -92,7 +92,7 @@ public class GuiLayer {
     private boolean zCutoffState = false;
     public float zCutoff = 100;
 
-
+    //-----------------------------------------------------------------------
     //Only 3D local Fractal
     //Range
     private final ImFloat FractalRange = new ImFloat(1);
@@ -117,7 +117,7 @@ public class GuiLayer {
     private final int[] powerStart = {2};
     public int power = 2;
 
-
+    //-----------------------------------------------------------------------
     public void gui() {
 
         ImGui.begin("Editor", ImGuiWindowFlags.AlwaysAutoResize);
@@ -217,7 +217,7 @@ public class GuiLayer {
                     if (ImGui.sliderInt("Quadsize", quadSizeStart, 1, 15)) {
                         quadSize = quadSizeStart[0];
                     }
-                    if (ImGui.inputInt("Resolution\nRecommend: (16-24)", workGroupDimensionStart)) {
+                    if (ImGui.inputInt("Resolution\nRecommend: (16-28)", workGroupDimensionStart)) {
                         workGroupDimension = workGroupDimensionStart.intValue();
                     }
                     if (ImGui.button("invert")) {

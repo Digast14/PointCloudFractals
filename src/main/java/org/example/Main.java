@@ -2,13 +2,13 @@ package org.example;
 
 import imgui.ImGui;
 import imgui.ImGuiIO;
-import org.example.gui.GuiLayer;
 import org.example.render.WorldRender;
 import org.example.scene.Camera;
 
 import static org.lwjgl.glfw.GLFW.*;
 
 public class Main implements IAppLogic {
+
 
     public static void main(String[] args) {
         Main main = new Main();

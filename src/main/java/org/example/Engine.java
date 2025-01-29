@@ -1,8 +1,6 @@
 package org.example;
 
 
-import imgui.ImGui;
-import imgui.ImGuiIO;
 import org.example.gui.GuiLayer;
 import org.example.render.WorldRender;
 
@@ -32,7 +30,7 @@ public class Engine {
 
 
     public void run(){
-        int maxFPS = 60; //FPS th game aims for;
+        int maxFPS = 60;
         double frameRate = 1.0d / (double) maxFPS;
         double previous = glfwGetTime();
         double steps = 0.0;
@@ -63,7 +61,7 @@ public class Engine {
         cleanup();
     }
 
-    private void init(){
+    public void init(){
         render.getPointCloudRender().initShaders(guiLayer);
     }
 

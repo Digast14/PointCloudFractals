@@ -34,7 +34,6 @@ out vec4 fragColor;
 #define PI 3.14159265359
 
 float timeSin = u_time;
-float t = timeSin;
 
 vec3 colors[12] = vec3[12](
 vec3(1.0, 0.0, 0.0),
@@ -62,11 +61,11 @@ vec4 qmul(in vec4 a, in vec4 b) {
 }
 
 vec4 qmul(in vec4 a, in float b) {
-    return vec4(a.x*b, a.y*b, a.z*b, a.w*b);
+    return vec4(a.x * b, a.y * b, a.z * b, a.w * b);
 }
 
 vec4 qmul(in float b, in vec4 a) {
-    return vec4(a.x*b, a.y*b, a.z*b, a.w*b);
+    return vec4(a.x * b, a.y * b, a.z * b, a.w * b);
 }
 
 vec4 qdiv(in vec4 a, in vec4 b) {
@@ -97,6 +96,7 @@ vec4 qcos(vec4 q) {
     return vec4(cos(a) * cosh(vabs), -sin(a) * sinh((vabs)) * v / vabs);
 }
 vec4 qexp(vec4 q) {
+    if(dot(q,q)==0) return vec4(0);
     float expA = exp(q.x);
     vec3 v = vec3(q.yzw);
     float vabs = length(v);
@@ -104,18 +104,26 @@ vec4 qexp(vec4 q) {
 }
 
 vec4 qln(vec4 q) {
+    if(dot(q,q)==0) return vec4(0);
     float qabs = length(q);
     float ln = log(qabs);
     float a = q.x;
     vec3 v = vec3(q.yzw);
     float vabs = length(v);
-    return vec4(ln, (v/vabs)*acos(a/qabs));
+    return vec4(ln, (v / vabs) * acos(a / qabs));
 }
 
-vec4 qpow(vec4 q, float n){
+vec4 qpow(vec4 q, float n) {
+    if(n==2) return qmul(q,q);
+    if(n.x==3) return qmul(qmul(q,q),q);
     return qexp(n * qln(q));
 }
 
+vec4 qpow(vec4 q, vec4 n) {
+    if(n.x==2) return qmul(q,q);
+    if(n.x==3) return qmul(qmul(q,q),q);
+    return qexp(n.x * qln(q));
+}
 
 
 
@@ -131,41 +139,17 @@ void calculateRootsOfUnity(int m, out vec4 roots[int(roootN)]) {
     }
 }
 
-//quaternion Functions
-//NewtonFractal function in Form of  f(q) = q-a(function(q)/derivative(q)), q and a are quantores
-vec4 qFunctionNewton(vec4 q) {
-    return q - qmul(vec4(1, timeSin * 2, timeSin, timeSin), qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n * qpow(q, n - 1)));
-}
-vec4 qFunctionNewton2(vec4 q) {
-    return q - qmul(vec4(1, 0, 0, 0), qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n * qpow(q, n - 1)));
-}
-
-
-//NewtonFractal with exp functions
-vec4 qFunctionExp(vec4 q) {
-    return q - qmul(vec4(1, 0, 0, 0), (qdiv(qexp(q) - vec4(1, 0, 0, 0), qexp(q))));
-}
-vec4 qFunctionExp2(vec4 q) {
-    return q - qmul(vec4(1, 0, 0, 0), (qdiv(qmul(qpow(q, n), qexp(q)) + vec4(1, 0, 0, 0), n * qmul(q, qexp(q)) + qmul(qpow(q, n), qexp(q)))));
-}
-
-
-//ratioanl Function
-vec4 qfunctionRational(vec4 q) {
-    return qmul(vec4(1, 0, 0, 0), qdiv(vec4(1, 0, 0, 0), qpow(q, 3) + qmul(q, vec4(-3, -3, 0, 0))));
-}
-
-
-//Mandelbrot Function, c = pixel Coordinates for Mandelbrot, c = Constant for Julia set equivalent
-vec4 qMandelbrotJulia(vec4 q, vec4 c) {
-    return qpow(q, 7) + qmul(vec4(3, 0, 0, 0) - c, qpow(q, 3)) + qmul(c + vec4(1, 1, 0, 0), q) + c;
-    //return q-qdiv(qpow(q,3)-vec4(1,0,0,0),qmul(vec4(3,0,0,0),qpow(q,2)))+c;
-}
 
 // Function placeholder (name javaFunction(z))
 vec4 javaFunction(vec4 q, vec4 c) {
     return /**/qsin(q);
 }
+
+vec4 mandelbrot(vec4 q, vec4 c) {
+    return c + qexp(2 * qln(q));
+}
+
+
 
 
 
@@ -191,8 +175,6 @@ vec3 NewtonFractalQuaternion(in vec4 c) {
 
 vec3 NewtonMethod2(in vec4 c) {
     vec4 z;
-
-    float k = 2;
     float breakOut = 64.0;
     if (u_qZeroC == 0) z = c;
     else z = u_qZero;
@@ -211,15 +193,23 @@ vec3 NewtonMethod2(in vec4 c) {
 vec3 NewtonMethod(in vec4 c) {
     vec4 z;
     vec4 zNudge;
+
+
     if (u_qZeroC == 0) {
         z = c;
         zNudge = c + c * u_nudgeValue;
     } else {
-        z = u_qZero;
-        zNudge = u_qZero;
+        z = vec4(0);
+        zNudge = z;
     }
 
+
+    //z = vec4(0);
+    //zNudge = vec4(0);
+
     for (int iteration = 0; iteration < u_maxIteration; iteration++) {
+        //z = mandelbrot(z, c);
+        //zNudge = mandelbrot(zNudge, c + c * 0.0001);
         z = javaFunction(z, c);
         zNudge = javaFunction(zNudge, c + c * u_nudgeValue);
         if (length(z - zNudge) > 1 && (iteration > u_maxIteration * u_breakoutFactor)) {
@@ -243,9 +233,9 @@ vec3 rayMarch(vec3 origin, vec3 dir) {
         //if (pos.x >0 ) continue;
         vec3 color;
 
-        if(u_mode==0)color =NewtonMethod(vec4(pos.xyz, 0));
-        if(u_mode==1)color = NewtonMethod2(vec4(pos.xyz, 0));
-        if(u_mode==2)color = NewtonFractalQuaternion(vec4(pos.xyz, 0));
+        if (u_mode == 0)color = NewtonMethod(vec4(pos.xyz, 0));
+        if (u_mode == 1)color = NewtonMethod2(vec4(pos.xyz, 0));
+        if (u_mode == 2)color = NewtonFractalQuaternion(vec4(pos.xyz, 0));
 
         if (color != vec3(0.0)) return color;
     }
@@ -271,9 +261,9 @@ void main() {
 
     if (u_gameMode == 0) {
         vec4 pixelCoord = vec4(uv / u_info + ro.xy, 0, 0);
-        if(u_mode==0)color = NewtonMethod(pixelCoord);
-        if(u_mode==1)color = NewtonMethod2(pixelCoord);
-        if(u_mode==2)color = NewtonFractalQuaternion(pixelCoord);
+        if (u_mode == 0)color = NewtonMethod(pixelCoord);
+        if (u_mode == 1)color = NewtonMethod2(pixelCoord);
+        if (u_mode == 2)color = NewtonFractalQuaternion(pixelCoord);
     } else {
         vec3 rd = u_direction;
         vec3 camLeftNormal = cross(u_direction, vec3(0.0, 0.0, 1.0));

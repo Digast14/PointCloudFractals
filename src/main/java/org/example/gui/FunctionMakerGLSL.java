@@ -30,7 +30,7 @@ public class FunctionMakerGLSL {
         while (!_sortedTokenStack.isEmpty()) {
             String savedA = "", savedB = "";
             if (_sortedTokenStack.peek().charAt(0) != '_') {
-                if (_sortedTokenStack.peek().equals("sin") || _sortedTokenStack.peek().equals("cos") || _sortedTokenStack.peek().equals("exp") || _sortedTokenStack.peek().equals("abs")) {
+                if (_sortedTokenStack.peek().equals("sin") || _sortedTokenStack.peek().equals("cos") || _sortedTokenStack.peek().equals("exp") || _sortedTokenStack.peek().equals("abs") || _sortedTokenStack.peek().equals("ln")) {
                     savedA = calculator.peek();
                     calculator.pop();
                     switch (_sortedTokenStack.peek()) {
@@ -38,6 +38,7 @@ public class FunctionMakerGLSL {
                         case "cos" -> calculator.push("qcos(" + savedA + ")");
                         case "exp" -> calculator.push("qexp(" + savedA + ")");
                         case "abs" -> calculator.push("abs(" + savedA + ")");
+                        case "ln" -> calculator.push("qln(" + savedA + ")");
                     }
                     _sortedTokenStack.pop();
                 } else {
@@ -75,7 +76,7 @@ public class FunctionMakerGLSL {
 
         while (!_inputStack.isEmpty()) {
             if (_inputStack.peek().charAt(0) != '_') {
-                if (_inputStack.peek().equals("sin") || _inputStack.peek().equals("cos") || _inputStack.peek().equals("exp") || _inputStack.peek().equals("abs")) {
+                if (_inputStack.peek().equals("sin") || _inputStack.peek().equals("cos") || _inputStack.peek().equals("exp") || _inputStack.peek().equals("abs")  || _inputStack.peek().equals("ln")) {
                     opStack.push(_inputStack.peek());
                 } else {
                     sortedTokenStack.push(_inputStack.peek());
@@ -113,17 +114,8 @@ public class FunctionMakerGLSL {
         String functionCopy = function + "$";
         boolean isPower = false;
         String longToken = "";
-        boolean needCloseParanthesis = false;
 
         while (!functionCopy.isEmpty()) {
-            if (needCloseParanthesis) {
-                while (functionCopy.charAt(0) != ')') {
-                    longToken = longToken + functionCopy.charAt(0);
-                    functionCopy = functionCopy.substring(1);
-                }
-                tokenStack.push(longToken);
-                needCloseParanthesis = false;
-            }
 
             if (functionCopy.charAt(0) >= '0' && functionCopy.charAt(0) <= '9' || functionCopy.charAt(0) == '.' || functionCopy.charAt(0) == 't') {
                 if (functionCopy.charAt(0) == 't') {
@@ -136,8 +128,8 @@ public class FunctionMakerGLSL {
                 }
                 if (!isPower) {
                     longToken = "vec4(" + longToken + ",0,0,0)";
-                } else {
-                    highestPolynomial = Math.max(highestPolynomial, Integer.parseInt(longToken));
+                } else if(!longToken.equals("timeSin")){
+                    highestPolynomial = Math.max(highestPolynomial, (int) Float.parseFloat(longToken));
                 }
                 tokenStack.push(longToken);
                 longToken = "";
@@ -155,28 +147,27 @@ public class FunctionMakerGLSL {
                 longToken = longToken + ")";
                 tokenStack.push(longToken);
                 if (!functionCopy.isEmpty()) functionCopy = functionCopy.substring(1);
-            } else if (functionCopy.startsWith("sin") || functionCopy.startsWith("cos") || functionCopy.startsWith("exp") || functionCopy.startsWith("abs")) {
-                if (functionCopy.startsWith("sin")) tokenStack.push("sin");
-                if (functionCopy.startsWith("cos")) tokenStack.push("cos");
-                if (functionCopy.startsWith("exp")) tokenStack.push("exp");
-                if (functionCopy.startsWith("abs")) tokenStack.push("abs");
-                functionCopy = functionCopy.substring(3);
-            } else {
-                if (isPower && functionCopy.charAt(0) == '(') {
-                    needCloseParanthesis = true;
-                } else {
-                    isPower = false;
+            } else if (functionCopy.startsWith("sin") || functionCopy.startsWith("cos") || functionCopy.startsWith("exp") || functionCopy.startsWith("abs") || functionCopy.startsWith("ln")) {
+                if (functionCopy.startsWith("ln")) {
+                    tokenStack.push("ln");
+                    functionCopy = functionCopy.substring(2);
+                }else{
+                    if (functionCopy.startsWith("sin")) tokenStack.push("sin");
+                    if (functionCopy.startsWith("cos")) tokenStack.push("cos");
+                    if (functionCopy.startsWith("exp")) tokenStack.push("exp");
+                    if (functionCopy.startsWith("abs")) tokenStack.push("abs");
+                    functionCopy = functionCopy.substring(3);
                 }
+
+            } else {
+                isPower = false;
                 longToken = "";
                 if (functionCopy.charAt(0) == '-' && (tokenStack.isEmpty() || (tokenStack.peek().charAt(0) == '_' && tokenStack.peek().length() > 2))) {
                     longToken = "-";
-                } else if (functionCopy.charAt(0) == 'q') {
-                    tokenStack.push("q");
-                } else if (functionCopy.charAt(0) == 'c') {
-                    tokenStack.push("c");
-                } else if (functionCopy.charAt(0) == 'n') {
-                    tokenStack.push("n");
                 } else switch (functionCopy.charAt(0)) {
+                    case 'q' -> tokenStack.push("q");
+                    case 'c' -> tokenStack.push("c");
+                    case 'n' -> tokenStack.push("n");
                     case '+' -> tokenStack.push("_plus");
                     case '-' -> tokenStack.push("_minus");
                     case '*' -> tokenStack.push("_qmul");

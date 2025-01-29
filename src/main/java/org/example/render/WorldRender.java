@@ -19,23 +19,19 @@ public class WorldRender {
     private final PointCloudRender.SceneSettings pointCloudSettings;
 
 
-
-
     public WorldRender(Window window) {
         GL.createCapabilities(); //Initialize OpenGL bindings
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
 
-        pointCloudSettings = new PointCloudRender.SceneSettings();
         camera = new Camera(window.getWidth(), window.getHeight());
         guiRender = new GuiRender(window);
         fractalRender = new FractalRender();
+        pointCloudSettings = new PointCloudRender.SceneSettings();
         pointCloudRender = new PointCloudRender(pointCloudSettings);
-
-
-
     }
+
 
     public void resize(int resX, int resY) {
         camera.resize(resX, resY);
@@ -75,16 +71,16 @@ public class WorldRender {
     }
 
 
-
-
     private void updatePointCloudSettings(GuiLayer guiLayer) {
         pointCloudSettings.range = guiLayer.range;
         pointCloudSettings.workGroupDimension = guiLayer.workGroupDimension;
     }
 
+
     public Camera getCamera() {
         return camera;
     }
+
 
     public PointCloudRender getPointCloudRender() {
         return pointCloudRender;
