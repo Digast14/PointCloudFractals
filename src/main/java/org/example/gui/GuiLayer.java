@@ -160,7 +160,7 @@ public class GuiLayer {
             time = startFloat[0];
         }
 
-        if (ImGui.sliderInt("power n", powerStart,0, 10)) {
+        if (ImGui.sliderInt("power n", powerStart, 0, 10)) {
             power = powerStart[0];
         }
 
@@ -189,10 +189,9 @@ public class GuiLayer {
             if (ImGui.colorEdit3("color2", col2)) {
                 color2 = new Vector3f(col2[0], col2[1], col2[2]);
             }
-            if (ImGui.colorEdit3("backgroundColor", col3)) {
-                color3 = new Vector3f(col3[0], col3[1], col3[2]);
-            }
-
+        }
+        if (ImGui.colorEdit3("backgroundColor", col3)) {
+            color3 = new Vector3f(col3[0], col3[1], col3[2]);
         }
 
 
@@ -237,7 +236,6 @@ public class GuiLayer {
                 if (ImGui.inputFloat("Step Size Mult", stepSizeMultStart)) {
                     stepSizeMult = stepSizeMultStart.floatValue();
                 }
-
                 if (ImGui.checkbox("add z cutoff", zCutoffState)) {
                     zCutoffState = !zCutoffState;
                 }
@@ -249,7 +247,10 @@ public class GuiLayer {
                     zCutOffStart[0] = 100f;
                     zCutoff = zCutOffStart[0];
                 }
+            
             }
+
+
             ImGui.treePop();
         }
         ImGui.end();

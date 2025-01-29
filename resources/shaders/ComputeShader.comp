@@ -28,11 +28,13 @@ uniform int u_reverse;
 uniform float u_normalPrecision;
 uniform int u_power;
 
-
+float t = timeSin;
 int n = u_power;
 
 //math function
 vec4 qmul(in vec4 a, in vec4 b) {
+    if ((a.y == 0 && a.z == 0 && a.w == 0) || ((b.y == 0 && b.z == 0 && b.w == 0))) return a * b;
+
     return vec4(
     a.x * b.x - a.y * b.y - a.z * b.z - a.w * b.w,
     a.x * b.y + a.y * b.x + a.z * b.w - a.w * b.z,
@@ -42,15 +44,15 @@ vec4 qmul(in vec4 a, in vec4 b) {
 }
 
 vec4 qmul(in vec4 a, in float b) {
-    return vec4(a.x*b, a.y*b, a.z*b, a.w*b);
+    return vec4(a.x * b, a.y * b, a.z * b, a.w * b);
 }
 
 vec4 qmul(in float b, in vec4 a) {
-    return vec4(a.x*b, a.y*b, a.z*b, a.w*b);
+    return vec4(a.x * b, a.y * b, a.z * b, a.w * b);
 }
 
 vec4 qdiv(in vec4 a, in vec4 b) {
-    float normSquared = b.x * b.x + b.y * b.y + b.z * b.z + b.w * b.w;
+    float normSquared = dot(b, b);
     if (normSquared == 0.0) return vec4(0.0);
 
     vec4 bConjugate = vec4(b.x, -b.yzw);
@@ -82,14 +84,20 @@ vec4 qexp(vec4 q) {
     float vabs = length(v);
     return vec4(expA * cos(vabs), expA * (v / vabs * sin(vabs)));
 }
-vec4 qpow(vec4 c, float p) {
-    if(p==0) return vec4(1,0,0,0);
-    vec4 sum = c;
-    for (int i = 1; i < p; i++) {
-        sum = qmul(sum, c);
-    }
-    return sum;
+
+vec4 qln(vec4 q) {
+    float qabs = length(q);
+    float ln = log(qabs);
+    float a = q.x;
+    vec3 v = vec3(q.yzw);
+    float vabs = length(v);
+    return vec4(ln, (v/vabs)*acos(a/qabs));
 }
+
+vec4 qpow(vec4 q, float n){
+    return qexp(n * qln(q));
+}
+
 
 //------------------------------------------------
 float julia(in vec3 pos) {
@@ -162,9 +170,9 @@ void main() {
     vec3 pos = (vec3(gridIndex) / float(gridDensity)) - vec3(range);
 
 
-    if(NewtonMethod(pos)>0){
+    if (NewtonMethod(pos) > 0) {
         return;
-    }else{
+    } else {
         uint currentIndex = atomicAdd(globalIndex, 1);
         if (currentIndex < vertexArrayLength) {
             vertices[currentIndex + 1] = vec4(pos, 1.0);

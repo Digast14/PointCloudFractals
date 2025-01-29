@@ -60,6 +60,7 @@ public class WorldRender {
 
     public void render(GuiLayer guiLayer, Window window) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClearColor(guiLayer.color3.x,guiLayer.color3.y,guiLayer.color3.z,1);
         glViewport(0, 0, window.getWidth(), window.getHeight());
 
         if (guiLayer.local3dFractal) pointCloudRender.render(guiLayer, camera);

@@ -34,6 +34,7 @@ out vec4 fragColor;
 #define PI 3.14159265359
 
 float timeSin = u_time;
+float t = timeSin;
 
 vec3 colors[12] = vec3[12](
 vec3(1.0, 0.0, 0.0),
@@ -101,13 +102,21 @@ vec4 qexp(vec4 q) {
     float vabs = length(v);
     return vec4(expA * cos(vabs), expA * (v / vabs * sin(vabs)));
 }
-vec4 qpow(vec4 c, float p) {
-    vec4 sum = c;
-    for (int i = 1; i < p; i++) {
-        sum = qmul(sum, c);
-    }
-    return sum;
+
+vec4 qln(vec4 q) {
+    float qabs = length(q);
+    float ln = log(qabs);
+    float a = q.x;
+    vec3 v = vec3(q.yzw);
+    float vabs = length(v);
+    return vec4(ln, (v/vabs)*acos(a/qabs));
 }
+
+vec4 qpow(vec4 q, float n){
+    return qexp(n * qln(q));
+}
+
+
 
 
 //Polynomial degree

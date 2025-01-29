@@ -115,16 +115,15 @@ public class PointCloudRender {
 
     public void render(GuiLayer guiLayer, Camera camera) {
         shaderProgram.bind();
-        parseUniform(camera);
+        parseUniform(guiLayer, camera);
         glPointSize(guiLayer.quadSize);
         glDrawArrays(GL_POINTS, 0, totalThreads);
         shaderProgram.unbind();
     }
 
-    private void parseUniform(Camera camera) {
+    private void parseUniform (GuiLayer guiLayer, Camera camera) {
         uniformsMap.setUniform("projection", camera.getProjectionMatrix());
         uniformsMap.setUniform("view", camera.getViewMatrix());
-
     }
 
     public void cleanup() {
