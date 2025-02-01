@@ -5,6 +5,7 @@ import org.example.gui.GuiLayer;
 import org.example.render.WorldRender;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.glfwGetTime;
 
 public class Engine {
 
@@ -35,7 +36,12 @@ public class Engine {
         double previous = glfwGetTime();
         double steps = 0.0;
 
+        int fpsCounter = 0;
+        int frameTime = (int) glfwGetTime();
+
         init();
+
+
 
         while (!glfwWindowShouldClose(window.getWindowPointer())) {
             glfwPollEvents();
@@ -47,11 +53,16 @@ public class Engine {
             steps += elapsed;
             while (steps >= frameRate) {
                 steps -= frameRate;
+                appLogic.input(window, render);
+                appLogic.update(window, render);
+                render.update(guiLayer);
             }
 
-            appLogic.input(window, render);
-            appLogic.update(window, render);
-            render.update(guiLayer);
+
+            guiLayer.setFPs((int) (1000/(elapsed*1000)));
+
+
+
             render.render(guiLayer, window);
 
             sync(current);

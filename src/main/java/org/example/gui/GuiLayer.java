@@ -117,11 +117,18 @@ public class GuiLayer {
     private final int[] powerStart = {2};
     public int power = 2;
 
+    private int fps = 0;
+
+    public void setFPs(int fps){
+        this.fps = fps;
+    }
+
     //-----------------------------------------------------------------------
     public void gui() {
 
         ImGui.begin("Editor", ImGuiWindowFlags.AlwaysAutoResize);
 
+        ImGui.text("fps:" + fps);
 
         ImGui.inputText("Input", functionInput);
         if (ImGui.button("compile Function")) {

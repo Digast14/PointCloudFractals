@@ -21,8 +21,12 @@ public class FunctionMakerGLSL {
         stringToTokenStack();
         operationSorter();
         code = makeCode();
+
+        sortedTokenStack.clear();
+        tokenStack.clear();
     }
 
+    //Actually turns sorted token Stack to glsl Code
     public String makeCode() {
         Stack<String> calculator = new Stack<>();
         Stack<String> _sortedTokenStack = reverseStack(sortedTokenStack);
@@ -69,7 +73,7 @@ public class FunctionMakerGLSL {
         return glslFinal;
     }
 
-
+    //Implements Shunting Yard algorithm to Sort tokenStack, https://en.wikipedia.org/wiki/Shunting_yard_algorithm
     private void operationSorter() {
         Stack<String> opStack = new Stack<>();
         Stack<String> _inputStack = reverseStack((Stack<String>) tokenStack.clone());
@@ -93,6 +97,10 @@ public class FunctionMakerGLSL {
                     }
                     _inputStack.pop();
                     opStack.pop();
+                    if(!opStack.isEmpty() && (opStack.peek().equals("sin") || opStack.peek().equals("cos") || opStack.peek().equals("exp") || opStack.peek().equals("abs")  || opStack.peek().equals("ln"))){
+                        sortedTokenStack.push(opStack.peek());
+                        opStack.pop();
+                    }
                 } else {
                     while (!opStack.isEmpty() && ((operatorPrecedence(opStack) > operatorPrecedence(_inputStack)) || (operatorPrecedence(opStack) == operatorPrecedence(_inputStack) && Objects.equals(_inputStack.peek(), "_qpow")))) {
                         sortedTokenStack.push(opStack.peek());
@@ -117,6 +125,7 @@ public class FunctionMakerGLSL {
 
         while (!functionCopy.isEmpty()) {
 
+            //for Numbers (turns them into Quaternions)
             if (functionCopy.charAt(0) >= '0' && functionCopy.charAt(0) <= '9' || functionCopy.charAt(0) == '.' || functionCopy.charAt(0) == 't') {
                 if (functionCopy.charAt(0) == 't') {
                     longToken = "timeSin";
@@ -126,6 +135,7 @@ public class FunctionMakerGLSL {
                     longToken = longToken + functionCopy.charAt(0);
                     functionCopy = functionCopy.substring(1);
                 }
+                //If token is after a power operator ^, and token is not a variable, check if its the highest Power (doesn't check if its polynomial but, I couldn't be bothered).
                 if (!isPower) {
                     longToken = "vec4(" + longToken + ",0,0,0)";
                 } else if(!longToken.equals("timeSin")){
@@ -133,7 +143,8 @@ public class FunctionMakerGLSL {
                 }
                 tokenStack.push(longToken);
                 longToken = "";
-            } else if (functionCopy.startsWith("quant(")) {
+            } //If the Input is a Quaternion, turn it to Vector, currently just takes input as is, might result in Compilation error
+            else if (functionCopy.startsWith("quant(")) {
                 functionCopy = functionCopy.substring(6);
                 longToken = "vec4(";
                 while (functionCopy.charAt(0) != ')') {
@@ -147,7 +158,8 @@ public class FunctionMakerGLSL {
                 longToken = longToken + ")";
                 tokenStack.push(longToken);
                 if (!functionCopy.isEmpty()) functionCopy = functionCopy.substring(1);
-            } else if (functionCopy.startsWith("sin") || functionCopy.startsWith("cos") || functionCopy.startsWith("exp") || functionCopy.startsWith("abs") || functionCopy.startsWith("ln")) {
+            }//Turns single Operators to Tokens
+            else if (functionCopy.startsWith("sin") || functionCopy.startsWith("cos") || functionCopy.startsWith("exp") || functionCopy.startsWith("abs") || functionCopy.startsWith("ln")) {
                 if (functionCopy.startsWith("ln")) {
                     tokenStack.push("ln");
                     functionCopy = functionCopy.substring(2);
@@ -158,8 +170,8 @@ public class FunctionMakerGLSL {
                     if (functionCopy.startsWith("abs")) tokenStack.push("abs");
                     functionCopy = functionCopy.substring(3);
                 }
-
-            } else {
+            }//Turns operators and quaternion variables to Tokens and pops everything that's not recognized.
+            else {
                 isPower = false;
                 longToken = "";
                 if (functionCopy.charAt(0) == '-' && (tokenStack.isEmpty() || (tokenStack.peek().charAt(0) == '_' && tokenStack.peek().length() > 2))) {
@@ -183,6 +195,7 @@ public class FunctionMakerGLSL {
             }
         }
     }
+
 
     private int operatorPrecedence(Stack<String> stack) {
         int operatorPrecedence = 0;

@@ -52,6 +52,9 @@ vec3(0.0, 1.0, 1.0)
 
 //math function
 vec4 qmul(in vec4 a, in vec4 b) {
+    if (a.y == 0 && a.z == 0 && a.w == 0) return a.x * b;
+    if (b.y == 0 && b.z == 0 && b.w == 0) return a * b.x;
+
     return vec4(
     a.x * b.x - a.y * b.y - a.z * b.z - a.w * b.w,
     a.x * b.y + a.y * b.x + a.z * b.w - a.w * b.z,
@@ -96,7 +99,7 @@ vec4 qcos(vec4 q) {
     return vec4(cos(a) * cosh(vabs), -sin(a) * sinh((vabs)) * v / vabs);
 }
 vec4 qexp(vec4 q) {
-    if(dot(q,q)==0) return vec4(0);
+    if (dot(q, q) == 0) return vec4(0);
     float expA = exp(q.x);
     vec3 v = vec3(q.yzw);
     float vabs = length(v);
@@ -104,7 +107,7 @@ vec4 qexp(vec4 q) {
 }
 
 vec4 qln(vec4 q) {
-    if(dot(q,q)==0) return vec4(0);
+    if (dot(q, q) == 0) return vec4(0);
     float qabs = length(q);
     float ln = log(qabs);
     float a = q.x;
@@ -114,14 +117,14 @@ vec4 qln(vec4 q) {
 }
 
 vec4 qpow(vec4 q, float n) {
-    if(n==2) return qmul(q,q);
-    if(n.x==3) return qmul(qmul(q,q),q);
+    if (n == 2) return qmul(q, q);
+    if (n.x == 3) return qmul(qmul(q, q), q);
     return qexp(n * qln(q));
 }
 
 vec4 qpow(vec4 q, vec4 n) {
-    if(n.x==2) return qmul(q,q);
-    if(n.x==3) return qmul(qmul(q,q),q);
+    if (n.x == 2) return qmul(q, q);
+    if (n.x == 3) return qmul(qmul(q, q), q);
     return qexp(n.x * qln(q));
 }
 
