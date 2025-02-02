@@ -36,8 +36,6 @@ public class Engine {
         double previous = glfwGetTime();
         double steps = 0.0;
 
-        int fpsCounter = 0;
-        int frameTime = (int) glfwGetTime();
 
         init();
 

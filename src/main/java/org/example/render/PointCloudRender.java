@@ -7,6 +7,7 @@ import org.example.render.shader.UniformsMap;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL15.glBufferSubData;
 import static org.lwjgl.opengl.GL43.*;
@@ -67,7 +68,6 @@ public class PointCloudRender {
         ByteBuffer buffer = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder());
         buffer.putInt(0).flip();
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, buffer);
-
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, globalIndexBuffer);
     }
 
@@ -96,6 +96,11 @@ public class PointCloudRender {
         glDispatchCompute(workGroupDimension, workGroupDimension, workGroupDimension);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalIndexBuffer);
+        IntBuffer test = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY).asIntBuffer();
+        guiLayer.setPointCount(test.get());
+
         computeShaderProgram.cleanup();
     }
 
@@ -119,7 +124,7 @@ public class PointCloudRender {
         shaderProgram.unbind();
     }
 
-    private void parseUniform (GuiLayer guiLayer, Camera camera) {
+    private void parseUniform(GuiLayer guiLayer, Camera camera) {
         uniformsMap.setUniform("projection", camera.getProjectionMatrix());
         uniformsMap.setUniform("view", camera.getViewMatrix());
     }

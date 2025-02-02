@@ -45,6 +45,7 @@ public class WorldRender {
             pointCloudRender.cleanup();
             pointCloudRender = new PointCloudRender(pointCloudSettings);
             pointCloudRender.initShaders(guiLayer);
+            guiLayer.newFunction = false;
 
         }
 

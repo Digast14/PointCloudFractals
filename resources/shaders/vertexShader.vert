@@ -14,6 +14,6 @@ uniform mat4 projection;
 out vec4 exColour;
 
 void main() {
-    gl_Position = projection * view * vertices[gl_VertexID];
+    gl_Position = (projection * view) * vertices[gl_VertexID];
     exColour = vec4(normals[gl_VertexID], 1);
 }

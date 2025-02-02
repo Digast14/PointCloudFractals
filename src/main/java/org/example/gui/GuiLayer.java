@@ -118,9 +118,13 @@ public class GuiLayer {
     public int power = 2;
 
     private int fps = 0;
-
     public void setFPs(int fps){
         this.fps = fps;
+    }
+
+    private int pointCount = 0;
+    public void setPointCount(int pointCount){
+        this.pointCount = pointCount;
     }
 
     //-----------------------------------------------------------------------
@@ -128,7 +132,11 @@ public class GuiLayer {
 
         ImGui.begin("Editor", ImGuiWindowFlags.AlwaysAutoResize);
 
-        ImGui.text("fps:" + fps);
+        ImGui.text("fps: " + fps);
+
+        if(local3dFractal){
+            ImGui.text("pointCount :" + pointCount);
+        }
 
         ImGui.inputText("Input", functionInput);
         if (ImGui.button("compile Function")) {
