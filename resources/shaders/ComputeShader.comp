@@ -2,8 +2,9 @@
 
 layout (local_size_x = 10, local_size_y = 10, local_size_z = 10) in; // Work group size
 
-layout (std430, binding = 0) buffer VoxelBuffer {
-    vec4 vertices[]; // Output vertices
+
+layout (std430, binding = 0) buffer Points {
+    vec4 points[]; // Output vertices
 };
 
 layout (std430, binding = 1) buffer NormalBuffer {
@@ -29,6 +30,8 @@ uniform float u_normalPrecision;
 uniform int u_power;
 
 int n = u_power;
+
+
 
 //math function
 vec4 qmul(in vec4 a, in vec4 b) {
@@ -136,7 +139,6 @@ float NewtonMethod(in vec3 c) {
 }
 
 
-
 vec3 calculateNormal(in vec3 p)
 {
     vec3 small_step = vec3(0.0);
@@ -157,8 +159,6 @@ vec3 calculateNormal(in vec3 p)
     return normal;
 }
 
-
-
 void main() {
     ivec3 gridIndex = ivec3(gl_GlobalInvocationID);
     vec3 pos = (vec3(gridIndex) / float(gridDensity)) - vec3(range);
@@ -168,7 +168,7 @@ void main() {
     } else {
         uint currentIndex = atomicAdd(globalIndex, 1);
         if (currentIndex < vertexArrayLength) {
-            vertices[currentIndex + 1] = vec4(pos, 1.0);
+            points[currentIndex + 1] = vec4(pos,1);
             normals[currentIndex + 1] = calculateNormal(pos);
         }
     }

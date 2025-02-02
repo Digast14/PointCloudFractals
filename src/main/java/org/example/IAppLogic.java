@@ -9,7 +9,7 @@ public interface IAppLogic {
 
     void init(Window window, WorldRender render);
 
-    void input(Window window, WorldRender render);
+    void input(Window window, WorldRender render, double frameRateMS);
 
     void update(Window window, WorldRender render);
 }

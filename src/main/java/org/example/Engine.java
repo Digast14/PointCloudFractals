@@ -29,9 +29,8 @@ public class Engine {
     }
 
 
-
     public void run(){
-        int maxFPS = 60;
+        int maxFPS = 180;
         double frameRate = 1.0d / (double) maxFPS;
         double previous = glfwGetTime();
         double steps = 0.0;
@@ -51,19 +50,13 @@ public class Engine {
             steps += elapsed;
             while (steps >= frameRate) {
                 steps -= frameRate;
-                appLogic.input(window, render);
+                appLogic.input(window, render, elapsed);
                 appLogic.update(window, render);
                 render.update(guiLayer);
             }
 
-
-            guiLayer.setFPs((int) (1000/(elapsed*1000)));
-
-
-
+            guiLayer.setFPs((int) (1000/(elapsed*1000.0)));
             render.render(guiLayer, window);
-
-            sync(current);
 
             glfwSwapBuffers(window.getWindowPointer());
         }
@@ -85,16 +78,5 @@ public class Engine {
         appLogic.cleanup();
         render.cleanup();
         window.cleanup();
-    }
-
-    private static void sync(double loopStartTime) {
-        float loopSlot = 1f / 50;
-        double endTime = loopStartTime + loopSlot;
-        while (glfwGetTime() < endTime) {
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException _) {
-            }
-        }
     }
 }

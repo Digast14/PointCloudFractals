@@ -8,6 +8,7 @@ import java.lang.Math;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 
+
 public class Camera {
 
     private final Vector3f direction;
@@ -151,4 +152,5 @@ public class Camera {
     public Vector3f getDirection() {
         return realDirection;
     }
+
 }

@@ -7,7 +7,6 @@ import org.example.render.shader.UniformsMap;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL15.glBufferSubData;
 import static org.lwjgl.opengl.GL43.*;
@@ -20,6 +19,7 @@ public class PointCloudRender {
     private int ssbo;
     private int normalBuffer;
     private int globalIndexBuffer;
+    private int pointCount;
 
     private final float range;
     private final int workGroupDimension;
@@ -27,6 +27,7 @@ public class PointCloudRender {
     private final int totalThreads;
 
     private UniformsMap uniformsMap;
+
 
     public PointCloudRender(SceneSettings sceneSettings) {
         workGroupDimension = sceneSettings.workGroupDimension;
@@ -52,7 +53,7 @@ public class PointCloudRender {
     private void createBuffers() {
         ssbo = glGenBuffers();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, (long) totalThreads * 32 * 4, GL_DYNAMIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (long) totalThreads * (32 * 4), GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
 
         normalBuffer = glGenBuffers();
@@ -63,7 +64,6 @@ public class PointCloudRender {
         globalIndexBuffer = glGenBuffers();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalIndexBuffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, 32, GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalIndexBuffer);
 
         ByteBuffer buffer = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder());
         buffer.putInt(0).flip();
@@ -98,8 +98,8 @@ public class PointCloudRender {
 
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalIndexBuffer);
-        IntBuffer test = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY).asIntBuffer();
-        guiLayer.setPointCount(test.get());
+        pointCount = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY).asIntBuffer().get();
+        guiLayer.setPointCount(pointCount);
 
         computeShaderProgram.cleanup();
     }
@@ -120,7 +120,7 @@ public class PointCloudRender {
         shaderProgram.bind();
         parseUniform(guiLayer, camera);
         glPointSize(guiLayer.quadSize);
-        glDrawArrays(GL_POINTS, 0, totalThreads);
+        glDrawArrays(GL_POINTS, 0, pointCount);
         shaderProgram.unbind();
     }
 
