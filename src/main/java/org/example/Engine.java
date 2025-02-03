@@ -39,7 +39,6 @@ public class Engine {
         init();
 
 
-
         while (!glfwWindowShouldClose(window.getWindowPointer())) {
             glfwPollEvents();
 

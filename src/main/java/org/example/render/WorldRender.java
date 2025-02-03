@@ -8,6 +8,7 @@ import org.example.scene.Camera;
 import org.lwjgl.opengl.GL;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.GL_VERTEX_PROGRAM_POINT_SIZE;
 
 public class WorldRender {
 
@@ -22,6 +23,7 @@ public class WorldRender {
     public WorldRender(Window window) {
         GL.createCapabilities(); //Initialize OpenGL bindings
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
         camera = new Camera(window.getWidth(), window.getHeight());
         guiRender = new GuiRender(window);

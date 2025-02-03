@@ -1,10 +1,10 @@
-#version 430 core
+#version 450 core
 
 layout (local_size_x = 10, local_size_y = 10, local_size_z = 10) in; // Work group size
 
 
 layout (std430, binding = 0) buffer Points {
-    vec4 points[]; // Output vertices
+    vec3 points[]; // Output vertices
 };
 
 layout (std430, binding = 1) buffer NormalBuffer {
@@ -28,6 +28,8 @@ uniform float u_breakoutFactor;
 uniform int u_reverse;
 uniform float u_normalPrecision;
 uniform int u_power;
+uniform int u_pass;
+
 
 int n = u_power;
 
@@ -167,9 +169,11 @@ void main() {
         return;
     } else {
         uint currentIndex = atomicAdd(globalIndex, 1);
-        if (currentIndex < vertexArrayLength) {
-            points[currentIndex + 1] = vec4(pos,1);
-            normals[currentIndex + 1] = calculateNormal(pos);
+        if(u_pass==1){
+            if (currentIndex < vertexArrayLength) {
+                points[currentIndex + 1] = pos;
+                normals[currentIndex + 1] = calculateNormal(pos);
+            }
         }
     }
 }

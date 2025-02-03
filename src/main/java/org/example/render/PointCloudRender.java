@@ -8,6 +8,7 @@ import org.example.render.shader.UniformsMap;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+
 import static org.lwjgl.opengl.GL15.glBufferSubData;
 import static org.lwjgl.opengl.GL43.*;
 
@@ -38,29 +39,21 @@ public class PointCloudRender {
 
 
     public void initShaders(GuiLayer guiLayer) {
-        computeShaderProgram = new ShaderProgramm("resources/shaders/ComputeShader.comp", GL_COMPUTE_SHADER);
+        computeShaderProgram = new ShaderProgramm("resources/shaders/PointCloud/ComputeShader.comp", GL_COMPUTE_SHADER);
         if (!guiLayer.function.isEmpty()) computeShaderProgram.editShader(GL_COMPUTE_SHADER, 0, guiLayer.function);
-        shaderProgram = new ShaderProgramm("resources/shaders/vertexShader.vert", GL_VERTEX_SHADER, "resources/shaders/fragmentShader.frag", GL_FRAGMENT_SHADER);
+        shaderProgram = new ShaderProgramm("resources/shaders/PointCloud/vertexShader.vert", GL_VERTEX_SHADER, "resources/shaders/PointCloud/fragmentShader.frag", GL_FRAGMENT_SHADER);
 
         System.out.println("Compute Shader ID: " + computeShaderProgram.getProgramID());
         System.out.println("Vertex Shader ID: " + shaderProgram.getProgramID());
 
-        createBuffers();
+        createIndexBuffer();
         dispatchCompute(guiLayer);
         dispatchVertex();
+
+        guiLayer.setPointCount(pointCount);
     }
 
-    private void createBuffers() {
-        ssbo = glGenBuffers();
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, (long) totalThreads * (32 * 4), GL_DYNAMIC_DRAW);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
-
-        normalBuffer = glGenBuffers();
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, normalBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, (long) totalThreads * 32 * 3, GL_DYNAMIC_DRAW);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, normalBuffer);
-
+    private void createIndexBuffer() {
         globalIndexBuffer = glGenBuffers();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalIndexBuffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, 32, GL_DYNAMIC_DRAW);
@@ -70,6 +63,31 @@ public class PointCloudRender {
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, buffer);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, globalIndexBuffer);
     }
+
+    private void createPointBuffers() {
+        ssbo = glGenBuffers();
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (long) pointCount * 32 * 3, GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
+
+        normalBuffer = glGenBuffers();
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, normalBuffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (long) pointCount * 32 * 3, GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, normalBuffer);
+    }
+
+    private void setPointCountReset() {
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalIndexBuffer);
+        pointCount = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY).asIntBuffer().get();
+
+        glBufferData(GL_SHADER_STORAGE_BUFFER, 32, GL_DYNAMIC_DRAW);
+        ByteBuffer buffer = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder());
+        buffer.putInt(0).flip();
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, buffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, globalIndexBuffer);
+
+    }
+
 
     private void dispatchCompute(GuiLayer guiLayer) {
         int gridDensity = (int) (totalThreadDimension / (range * 2));
@@ -88,6 +106,8 @@ public class PointCloudRender {
         glUniform1i(glGetUniformLocation(id, "u_reverse"), guiLayer.reverse);
         glUniform1f(glGetUniformLocation(id, "u_normalPrecision"), guiLayer.normalPrecision);
         glUniform1i(glGetUniformLocation(id, "u_power"), guiLayer.power);
+        glUniform1i(glGetUniformLocation(id, "u_pass"), 0);
+
 
         System.out.println(workGroupDimension);
         System.out.println(totalThreadDimension);
@@ -96,10 +116,15 @@ public class PointCloudRender {
         glDispatchCompute(workGroupDimension, workGroupDimension, workGroupDimension);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
+        //------------------------------Second Pass---------------------------------------------
+        setPointCountReset();
+        createPointBuffers();
 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalIndexBuffer);
-        pointCount = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY).asIntBuffer().get();
-        guiLayer.setPointCount(pointCount);
+        glUniform1i(glGetUniformLocation(id, "vertexArrayLength"), pointCount);
+        glUniform1i(glGetUniformLocation(id, "u_pass"), 1);
+
+        glDispatchCompute(workGroupDimension, workGroupDimension, workGroupDimension);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
         computeShaderProgram.cleanup();
     }
@@ -109,8 +134,10 @@ public class PointCloudRender {
         uniformsMap = new UniformsMap(shaderProgram.getProgramID());
         uniformsMap.createUniform("projection");
         uniformsMap.createUniform("view");
+        uniformsMap.createUniform("minPointSize");
+        uniformsMap.createUniform("range");
 
-        glBindBuffer(GL_ARRAY_BUFFER, ssbo);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
 
         shaderProgram.unbind();
     }
@@ -119,7 +146,7 @@ public class PointCloudRender {
     public void render(GuiLayer guiLayer, Camera camera) {
         shaderProgram.bind();
         parseUniform(guiLayer, camera);
-        glPointSize(guiLayer.quadSize);
+        //glPointSize(guiLayer.quadSize);
         glDrawArrays(GL_POINTS, 0, pointCount);
         shaderProgram.unbind();
     }
@@ -127,6 +154,8 @@ public class PointCloudRender {
     private void parseUniform(GuiLayer guiLayer, Camera camera) {
         uniformsMap.setUniform("projection", camera.getProjectionMatrix());
         uniformsMap.setUniform("view", camera.getViewMatrix());
+        uniformsMap.setUniform("minPointSize", (float) guiLayer.quadSize);
+        uniformsMap.setUniform("range", range);
     }
 
     public void cleanup() {
