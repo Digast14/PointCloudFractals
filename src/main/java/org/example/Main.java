@@ -32,19 +32,15 @@ public class Main implements IAppLogic {
         if (!imGuiIO.getWantCaptureKeyboard()) {
             Camera camera = render.getCamera();
             float move = 1.5F * (float) frameRateMS;
+            move = 0.01F;
             if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) camera.moveDown(move);
             if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_SPACE) == GLFW_PRESS) camera.moveUp(move);
             if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_W) == GLFW_PRESS) camera.moveForward(move);
             if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_A) == GLFW_PRESS) camera.moveLeft(move);
             if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_S) == GLFW_PRESS) camera.moveBackwards(move);
             if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_D) == GLFW_PRESS) camera.moveRight(move);
-            if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_Q) == GLFW_PRESS){
-                camera.speedUp(2.5F * ((float) frameRateMS)+1);
-            }
-            if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_E) == GLFW_PRESS){
-                camera.speedDown(2.5F * ((float) frameRateMS)+1);
-            }
-
+            if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_Q) == GLFW_PRESS) camera.speedUp(1.02F);
+            if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_E) == GLFW_PRESS) camera.speedDown(1.02F);
             if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_R) == GLFW_PRESS) camera.setRotation((float) Math.PI, 0);
             if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_1) == GLFW_PRESS) camera.setBlackAndWhite();
             if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_2) == GLFW_PRESS) camera.setRGB();

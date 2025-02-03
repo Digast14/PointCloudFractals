@@ -7,6 +7,7 @@ import org.example.render.shader.UniformsMap;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Locale;
 
 
 import static org.lwjgl.opengl.GL15.glBufferSubData;
@@ -51,6 +52,8 @@ public class PointCloudRender {
         dispatchVertex();
 
         guiLayer.setPointCount(pointCount);
+
+        System.out.println("");
     }
 
     private void createIndexBuffer() {
@@ -85,7 +88,6 @@ public class PointCloudRender {
         buffer.putInt(0).flip();
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, buffer);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, globalIndexBuffer);
-
     }
 
 
@@ -109,9 +111,8 @@ public class PointCloudRender {
         glUniform1i(glGetUniformLocation(id, "u_pass"), 0);
 
 
-        System.out.println(workGroupDimension);
-        System.out.println(totalThreadDimension);
-        System.out.println(totalThreads);
+        System.out.print("total threads: ");
+        System.out.printf(Locale.US,"%,d", totalThreads);
 
         glDispatchCompute(workGroupDimension, workGroupDimension, workGroupDimension);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);

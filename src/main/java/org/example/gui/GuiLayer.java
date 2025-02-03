@@ -118,12 +118,14 @@ public class GuiLayer {
     public int power = 2;
 
     private int fps = 0;
-    public void setFPs(int fps){
+
+    public void setFPs(int fps) {
         this.fps = fps;
     }
 
     private int pointCount = 0;
-    public void setPointCount(int pointCount){
+
+    public void setPointCount(int pointCount) {
         this.pointCount = pointCount;
     }
 
@@ -134,7 +136,7 @@ public class GuiLayer {
 
         ImGui.text("fps: " + fps);
 
-        if(local3dFractal){
+        if (local3dFractal) {
             ImGui.text("pointCount :" + pointCount);
         }
 
@@ -143,10 +145,10 @@ public class GuiLayer {
             System.out.println("Text entered: " + functionInput.get());
             FunctionMakerGLSL codeEdit = new FunctionMakerGLSL(functionInput.get());
             function = codeEdit.code;
-            System.out.println(function);
+            System.out.println("GLSL Code injection: " + function);
             newFunction = true;
             polynomialDegree = codeEdit.highestPolynomial;
-            System.out.println("highest polynomial degree ist:" + polynomialDegree);
+            // System.out.println("highest polynomial degree is:" + polynomialDegree);
         } else newFunction = false;
 
         if (ImGui.checkbox("custom q Zero", booleanQZeroC)) {
@@ -232,7 +234,7 @@ public class GuiLayer {
                     if (ImGui.sliderInt("Quadsize", quadSizeStart, 1, 15)) {
                         quadSize = quadSizeStart[0];
                     }
-                    if (ImGui.inputInt("Resolution\nRecommend: (16-28)", workGroupDimensionStart)) {
+                    if (ImGui.inputInt("Resolution\nRecommend: (16-32)", workGroupDimensionStart)) {
                         workGroupDimension = workGroupDimensionStart.intValue();
                     }
                     if (ImGui.button("invert")) {
@@ -262,7 +264,7 @@ public class GuiLayer {
                     zCutOffStart[0] = 100f;
                     zCutoff = zCutOffStart[0];
                 }
-            
+
             }
 
 

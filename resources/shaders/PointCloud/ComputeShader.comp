@@ -145,20 +145,21 @@ vec3 calculateNormal(in vec3 p)
 {
     vec3 small_step = vec3(0.0);
 
+    float stepSize = 0.0003;
+
     float gradient_x = 0;
     float gradient_y = 0;
     float gradient_z = 0;
     for (int i = 0; i < u_normalPrecision; i++) {
-        small_step += vec3(0.001, 0.0, 0.0) * range;
+        small_step += vec3(stepSize, 0.0, 0.0) * range;
         gradient_x += NewtonMethod(p + small_step.xyy) - NewtonMethod(p - small_step.xyy);
         gradient_y += NewtonMethod(p + small_step.yxy) - NewtonMethod(p - small_step.yxy);
         gradient_z += NewtonMethod(p + small_step.yyx) - NewtonMethod(p - small_step.yyx);
     }
     vec3 normal = vec3(gradient_x / u_normalPrecision, gradient_y / u_normalPrecision, gradient_z / u_normalPrecision);
 
-    if (dot(normal, normal) == 0) normal = vec3(0.1);
-    else normalize(normal);
-    return normal;
+    if (dot(normal, normal) == 0) return vec3(0.1);
+    else return normalize(normal);
 }
 
 void main() {

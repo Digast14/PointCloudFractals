@@ -148,12 +148,6 @@ vec4 javaFunction(vec4 q, vec4 c) {
     return /**/qsin(q);
 }
 
-vec4 mandelbrot(vec4 q, vec4 c) {
-    return c + qexp(2 * qln(q));
-}
-
-
-
 
 
 
@@ -202,17 +196,11 @@ vec3 NewtonMethod(in vec4 c) {
         z = c;
         zNudge = c + c * u_nudgeValue;
     } else {
-        z = vec4(0);
+        z =u_qZero;
         zNudge = z;
     }
-
-
-    //z = vec4(0);
-    //zNudge = vec4(0);
-
     for (int iteration = 0; iteration < u_maxIteration; iteration++) {
-        //z = mandelbrot(z, c);
-        //zNudge = mandelbrot(zNudge, c + c * 0.0001);
+
         z = javaFunction(z, c);
         zNudge = javaFunction(zNudge, c + c * u_nudgeValue);
         if (length(z - zNudge) > 1 && (iteration > u_maxIteration * u_breakoutFactor)) {
@@ -231,9 +219,6 @@ vec3 rayMarch(vec3 origin, vec3 dir) {
         t += u_stepSize + i * u_stepSizeMult;
 
         if (pos.z > u_zCutoff) continue;
-        //if (pos.z < -0.1) continue;
-        //if (pos.y >0 ) continue;
-        //if (pos.x >0 ) continue;
         vec3 color;
 
         if (u_mode == 0)color = NewtonMethod(vec4(pos.xyz, 0));

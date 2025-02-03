@@ -63,7 +63,7 @@ public class ShaderProgramm {
             programID = createProgram(shader1, shader2);
             glDeleteShader(shader1);
         }
-        System.out.println("succesful edit");
+        System.out.println("succesful recompile of shader:" + programID);
     }
 
 
