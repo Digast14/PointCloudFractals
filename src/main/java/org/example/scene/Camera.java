@@ -36,8 +36,8 @@ public class Camera {
 
         speedMult = 1;
         mode = 0;
-
     }
+
     //-----------------------------------------------
     public float getSpeed() {
         return speedMult;
@@ -51,9 +51,10 @@ public class Camera {
         speedMult /= inc;
     }
 
-    public void setSpeed(float speed){
+    public void setSpeed(float speed) {
         speedMult = speed;
     }
+
     //-----------------------------------------------
     public Vector3f getPosition() {
         return position;
@@ -63,6 +64,7 @@ public class Camera {
         position.set(x, y, z);
         recalculate();
     }
+
     //-----------------------------------------------
     public int getMode() {
         return mode;
@@ -79,6 +81,7 @@ public class Camera {
     public void setRGB() {
         mode = 2;
     }
+
     //-----------------------------------------------
     public void setRotation(float x, float y) {
         rotation.set(x, y);
@@ -92,27 +95,28 @@ public class Camera {
             recalculate();
         }
     }
+
     //-----------------------------------------------
     public void moveBackwards(float inc) {
-        viewMatrix.positiveZ(direction).negate().mul(inc/ speedMult);
+        viewMatrix.positiveZ(direction).negate().mul(inc / speedMult);
         position.sub(direction);
         recalculate();
     }
 
     public void moveDown(float inc) {
-        viewMatrix.positiveY(up).mul(inc/ speedMult);
+        viewMatrix.positiveY(up).mul(inc / speedMult);
         position.sub(up);
         recalculate();
     }
 
     public void moveForward(float inc) {
-        viewMatrix.positiveZ(direction).negate().mul(inc/ speedMult);
+        viewMatrix.positiveZ(direction).negate().mul(inc / speedMult);
         position.add(direction);
         recalculate();
     }
 
     public void moveLeft(float inc) {
-        viewMatrix.positiveX(right).mul(inc/ speedMult);
+        viewMatrix.positiveX(right).mul(inc / speedMult);
         position.sub(right);
         recalculate();
     }
@@ -124,7 +128,7 @@ public class Camera {
     }
 
     public void moveUp(float inc) {
-        viewMatrix.positiveY(up).mul(inc/ speedMult);
+        viewMatrix.positiveY(up).mul(inc / speedMult);
         position.add(up);
         recalculate();
     }

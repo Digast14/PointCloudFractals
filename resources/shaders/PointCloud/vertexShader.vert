@@ -25,7 +25,8 @@ void main() {
     vec3 relativePos = worldPos - cameraPos;
     float distanceToCamera = dot(relativePos, relativePos);
     if(distanceToCamera> range/2.0) gl_PointSize = minPointSize;
-    else gl_PointSize = clamp(range / distanceToCamera, minPointSize, 10.0);
+    else gl_PointSize = clamp(range / distanceToCamera, minPointSize, 100.0);
+
 
     exColour = vec4(normals[gl_VertexID], 1);
 }

@@ -6,6 +6,8 @@ import org.example.render.WorldRender;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
+import static org.lwjgl.opengl.GL11.GL_NO_ERROR;
+import static org.lwjgl.opengl.GL11.glGetError;
 
 public class Engine {
 
@@ -56,7 +58,10 @@ public class Engine {
 
             guiLayer.setFPs((int) (1000/(elapsed*1000.0)));
             render.render(guiLayer, window);
-
+            int error = glGetError();
+            if (error != GL_NO_ERROR) {
+                System.err.println("OpenGL Error: " + error);
+            }
             glfwSwapBuffers(window.getWindowPointer());
         }
         cleanup();

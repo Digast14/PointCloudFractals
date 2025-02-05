@@ -102,6 +102,10 @@ public class GuiLayer {
     private final ImInt normalPrecisionStart = new ImInt(20);
     public int normalPrecision = 20;
 
+    //normal step Size
+    private final ImFloat normalStepSizeStart = new ImFloat(0.001f);
+    public float normalStepSize = 0.001f;
+
     //quadSize
     private final int[] quadSizeStart = {4};
     public int quadSize = 4;
@@ -230,6 +234,9 @@ public class GuiLayer {
 
                     if (ImGui.inputInt("normal Precision", normalPrecisionStart)) {
                         normalPrecision = normalPrecisionStart.intValue();
+                    }
+                    if (ImGui.inputFloat("Normal Step Size", normalStepSizeStart)) {
+                        normalStepSize = normalStepSizeStart.floatValue();
                     }
                     if (ImGui.sliderInt("Quadsize", quadSizeStart, 1, 15)) {
                         quadSize = quadSizeStart[0];

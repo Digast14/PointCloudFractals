@@ -21,7 +21,7 @@ public class WorldRender {
 
 
     public WorldRender(Window window) {
-        GL.createCapabilities(); //Initialize OpenGL bindings
+        GL.createCapabilities();
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
@@ -35,6 +35,7 @@ public class WorldRender {
 
     public void resize(int resX, int resY) {
         camera.resize(resX, resY);
+        pointCloudRender.resize(resX, resY);
     }
 
 
@@ -46,12 +47,12 @@ public class WorldRender {
             pointCloudRender = new PointCloudRender(pointCloudSettings);
             pointCloudRender.initShaders(guiLayer);
             guiLayer.newFunction = false;
-
         }
 
         if (guiLayer.local3dFractalChangeMode) {
             camera.setPosition(0.0F, 0.0F, 0.0F);
             camera.setSpeed(1);
+            camera.setRotation((float) Math.PI, 0);
         }
     }
 
@@ -64,11 +65,6 @@ public class WorldRender {
         else fractalRender.render(camera, guiLayer, window);
 
         guiRender.render(guiLayer);
-
-        int error = glGetError();
-        if (error != GL_NO_ERROR) {
-            System.err.println("OpenGL Error: " + error);
-        }
     }
 
 
