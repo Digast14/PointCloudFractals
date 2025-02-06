@@ -1,5 +1,6 @@
 package org.example.render;
 
+import org.example.gui.GuiLayer;
 import org.example.render.shader.ShaderProgramm;
 
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
@@ -21,7 +22,7 @@ public class PostProcessRender {
 
     public PostProcessRender(int texture){
         this.texture = texture;
-        postProcessingProgram = new ShaderProgramm("resources/shaders/PointCloud/PostProcessingVert.vert", GL_VERTEX_SHADER, "resources/shaders/PointCloud/PostProcessingFrag.frag", GL_FRAGMENT_SHADER);
+        postProcessingProgram = new ShaderProgramm("shaders/PostProcessing/PostProcessingVert.vert", GL_VERTEX_SHADER, "shaders/PostProcessing/PostProcessingFrag.frag", GL_FRAGMENT_SHADER);
         createBuffers();
     }
 
@@ -54,10 +55,11 @@ public class PostProcessRender {
         glEnableVertexAttribArray(3);
     }
 
-    public void render(int width, int height){
+    public void render(PointCloudRender.SceneSettings sceneSettings, GuiLayer guiLayer){
         postProcessingProgram.bind();
         glUniform1i(glGetUniformLocation(postProcessingProgram.getProgramID(), "colorTexture"), 0);
-        glUniform2f(glGetUniformLocation(postProcessingProgram.getProgramID(), "u_resolution"), width, height);
+        glUniform2f(glGetUniformLocation(postProcessingProgram.getProgramID(), "u_resolution"), sceneSettings.width, sceneSettings.height);
+        glUniform1i(glGetUniformLocation(postProcessingProgram.getProgramID(), "blur"), guiLayer.blur);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);

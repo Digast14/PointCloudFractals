@@ -18,6 +18,7 @@ public class PointCloudRender {
 
     private ShaderProgramm shaderProgram;
     private ShaderProgramm computeShaderProgram;
+    private SceneSettings sceneSettings;
 
     private int ssbo;
     private int normalBuffer;
@@ -40,19 +41,20 @@ public class PointCloudRender {
     private PostProcessRender postProcessRender;
 
     public PointCloudRender(SceneSettings sceneSettings) {
+        this.sceneSettings = sceneSettings;
         workGroupDimension = sceneSettings.workGroupDimension;
         totalThreadDimension = workGroupDimension * sceneSettings.threadDimension;
         totalThreads = totalThreadDimension * totalThreadDimension * totalThreadDimension;
         range = sceneSettings.range;
-        width = 1920;
-        height = 1080;
+        width = sceneSettings.width;
+        height = sceneSettings.height;
     }
 
 
     public void initShaders(GuiLayer guiLayer) {
-        computeShaderProgram = new ShaderProgramm("resources/shaders/PointCloud/ComputeShader.comp", GL_COMPUTE_SHADER);
+        computeShaderProgram = new ShaderProgramm("shaders/PointCloud/ComputeShader.comp", GL_COMPUTE_SHADER);
         if (!guiLayer.function.isEmpty()) computeShaderProgram.editShader(GL_COMPUTE_SHADER, 0, guiLayer.function);
-        shaderProgram = new ShaderProgramm("resources/shaders/PointCloud/vertexShader.vert", GL_VERTEX_SHADER, "resources/shaders/PointCloud/fragmentShader.frag", GL_FRAGMENT_SHADER);
+        shaderProgram = new ShaderProgramm("shaders/PointCloud/vertexShader.vert", GL_VERTEX_SHADER, "shaders/PointCloud/fragmentShader.frag", GL_FRAGMENT_SHADER);
         System.out.println("Compute Shader ID: " + computeShaderProgram.getProgramID());
         System.out.println("Vertex Shader ID: " + shaderProgram.getProgramID());
 
@@ -211,7 +213,7 @@ public class PointCloudRender {
         parseUniform(guiLayer, camera);
         renderToFBO();
         shaderProgram.unbind();
-        postProcessRender.render(width, height);
+        postProcessRender.render(sceneSettings, guiLayer);
     }
 
 
@@ -220,7 +222,7 @@ public class PointCloudRender {
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glDrawArrays(GL_POINTS, 0, pointCount);
+        glDrawArrays(GL_POINTS, 0, pointCount-1);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
@@ -245,5 +247,7 @@ public class PointCloudRender {
         public float range = 1f;
         public int workGroupDimension = 16;
         public int threadDimension = 10;
+        public int width = 1920;
+        public int height = 1080;
     }
 }

@@ -9,6 +9,8 @@ import imgui.type.ImString;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import java.util.Locale;
+
 public class GuiLayer {
 
 
@@ -103,8 +105,8 @@ public class GuiLayer {
     public int normalPrecision = 20;
 
     //normal step Size
-    private final ImFloat normalStepSizeStart = new ImFloat(0.001f);
-    public float normalStepSize = 0.001f;
+    private final ImFloat normalStepSizeStart = new ImFloat(0.005f);
+    public float normalStepSize = 0.005f;
 
     //quadSize
     private final int[] quadSizeStart = {4};
@@ -121,11 +123,15 @@ public class GuiLayer {
     private final int[] powerStart = {2};
     public int power = 2;
 
+    //fps
     private int fps = 0;
-
     public void setFPs(int fps) {
         this.fps = fps;
     }
+
+    //blur
+    public int blur = 0;
+
 
     private int pointCount = 0;
 
@@ -141,7 +147,7 @@ public class GuiLayer {
         ImGui.text("fps: " + fps);
 
         if (local3dFractal) {
-            ImGui.text("pointCount :" + pointCount);
+            ImGui.text(String.format(Locale.US,"Points: %,d", pointCount));
         }
 
         ImGui.inputText("Input", functionInput);
@@ -152,7 +158,6 @@ public class GuiLayer {
             System.out.println("GLSL Code injection: " + function);
             newFunction = true;
             polynomialDegree = codeEdit.highestPolynomial;
-            // System.out.println("highest polynomial degree is:" + polynomialDegree);
         } else newFunction = false;
 
         if (ImGui.checkbox("custom q Zero", booleanQZeroC)) {
@@ -246,6 +251,9 @@ public class GuiLayer {
                     }
                     if (ImGui.button("invert")) {
                         reverse = (reverse + 1) % 2;
+                    }
+                    if (ImGui.button("blur")) {
+                        blur = (blur + 1) % 2;
                     }
                 }
             } else {

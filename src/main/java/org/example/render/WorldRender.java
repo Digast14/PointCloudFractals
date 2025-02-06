@@ -29,13 +29,17 @@ public class WorldRender {
         guiRender = new GuiRender(window);
         fractalRender = new FractalRender();
         pointCloudSettings = new PointCloudRender.SceneSettings();
+        pointCloudSettings.width = window.getWidth();
+        pointCloudSettings.height = window.getHeight();
         pointCloudRender = new PointCloudRender(pointCloudSettings);
     }
 
 
-    public void resize(int resX, int resY) {
-        camera.resize(resX, resY);
-        pointCloudRender.resize(resX, resY);
+    public void resize(int width, int height) {
+        camera.resize(width, height);
+        pointCloudRender.resize(width, height);
+        pointCloudSettings.width = width;
+        pointCloudSettings.height = height;
     }
 
 

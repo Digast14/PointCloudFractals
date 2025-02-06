@@ -120,7 +120,10 @@ vec4 javaFunction(vec4 q, vec4 c) {
 }
 
 
-float NewtonMethod(in vec3 c) {
+
+int mode = 0;
+
+int JuliaSet(in vec3 c) {
     vec4 z;
     vec4 zNudge;
     if (u_qZeroC == 0) {
@@ -135,42 +138,91 @@ float NewtonMethod(in vec3 c) {
         z = javaFunction(z, vec4(c, 0));
         zNudge = javaFunction(zNudge, vec4(c, 0) + vec4(c, 0) * u_nudgeValue);
         if (length(z - zNudge) > 1.0 && (iteration > u_maxIteration * u_breakoutFactor)) {
-            return abs(u_reverse);
+            if (mode == 0)return abs(u_reverse);
+            return abs(u_reverse - 1);
         }
     }
-    return abs(u_reverse - 1);
-}
+    if (mode == 0) return abs(u_reverse - 1);
+    return abs(u_reverse);
 
+
+}
 
 vec3 calculateNormal(in vec3 p)
 {
-    vec3 small_step = vec3(0.0);
+    mode = 1;
+
+    int gradient_x = 0;
+    int gradient_y = 0;
+    int gradient_z = 0;
+
+    vec3 small_step = vec3(0);
+    float relativeStepSize = u_normalStepSize * range;
 
 
-    float gradient_x = 0;
-    float gradient_y = 0;
-    float gradient_z = 0;
-    for (int i = 0; i < u_normalPrecision; i++) {
-        small_step += vec3(u_normalStepSize*range,0,0); //*range
-        gradient_x += NewtonMethod(p + small_step.xyy) - NewtonMethod(p - small_step.xyy);
-        gradient_y += NewtonMethod(p + small_step.yxy) - NewtonMethod(p - small_step.yxy);
-        gradient_z += NewtonMethod(p + small_step.yyx) - NewtonMethod(p - small_step.yyx);
+    if (true) {
+        for (int i = 0; i < u_normalPrecision; i++) {
+            small_step += vec3(relativeStepSize, 0, 0); //*range
+            gradient_x += JuliaSet(p + small_step.xyy) - JuliaSet(p - small_step.xyy);
+            gradient_y += JuliaSet(p + small_step.yxy) - JuliaSet(p - small_step.yxy);
+            gradient_z += JuliaSet(p + small_step.yyx) - JuliaSet(p - small_step.yyx);
+        }
+    } else {
+        vec3 small_step = vec3(relativeStepSize, 0, 0); //*range
+
+        for (int i = 1; i <= u_normalPrecision; i++) {
+            int xResult = JuliaSet(p + vec3(relativeStepSize, 0, 0) * i);
+            if (xResult == 0) break;
+            gradient_x += xResult;
+
+        }
+        for (int i = 1; i <= u_normalPrecision; i++) {
+            int xResultN = JuliaSet(p - vec3(relativeStepSize, 0, 0) * i);
+            if (xResultN == 0) break;
+            gradient_x -= xResultN;
+        }
+
+
+        for (int i = 1; i <= u_normalPrecision; i++) {
+            int yResult = JuliaSet(p + small_step.yxy * i);
+            if (yResult == 0) break;
+            gradient_y += yResult;
+        }
+        for (int i = 1; i <= u_normalPrecision; i++) {
+            int yResultN = JuliaSet(p - small_step.yxy * i);
+            if (yResultN == 0) break;
+            gradient_y -= yResultN;
+        }
+
+
+        for (int i = 1; i <= u_normalPrecision; i++) {
+            int zResult = JuliaSet(p + small_step.yyx * i);
+            if (zResult == 0) break;
+            gradient_z += zResult;
+        }
+        for (int i = 1; i <= u_normalPrecision; i++) {
+            int zResultN = JuliaSet(p - small_step.yyx * i);
+            if (zResultN == 0) break;
+            gradient_z -= zResultN;
+        }
     }
-    vec3 normal = vec3(gradient_x / u_normalPrecision, gradient_y / u_normalPrecision, gradient_z / u_normalPrecision);
 
+
+    vec3 normal = vec3(gradient_x, gradient_y, gradient_z) / u_normalPrecision;
     if (dot(normal, normal) == 0) return vec3(0.1);
     else return normalize(normal);
 }
+
 
 void main() {
     ivec3 gridIndex = ivec3(gl_GlobalInvocationID);
     vec3 pos = (vec3(gridIndex) / float(gridDensity)) - vec3(range);
 
-    if (NewtonMethod(pos) > 0) {
+    if (JuliaSet(pos) > 0) {
         return;
     } else {
         uint currentIndex = atomicAdd(globalIndex, 1);
-        if(u_pass==1){
+        if (u_pass == 1) {
             if (currentIndex < vertexArrayLength) {
                 points[currentIndex + 1] = pos;
                 normals[currentIndex + 1] = calculateNormal(pos);
