@@ -125,6 +125,7 @@ public class GuiLayer {
 
     //fps
     private int fps = 0;
+
     public void setFPs(int fps) {
         this.fps = fps;
     }
@@ -132,12 +133,16 @@ public class GuiLayer {
     //blur
     public int blur = 0;
 
-
+    //point Count
     private int pointCount = 0;
 
     public void setPointCount(int pointCount) {
         this.pointCount = pointCount;
     }
+
+    //Custom Size
+    private boolean customDimensions;
+    public final int[] cDimensions = {16, 16, 16};
 
     //-----------------------------------------------------------------------
     public void gui() {
@@ -146,10 +151,12 @@ public class GuiLayer {
 
         ImGui.text("fps: " + fps);
 
-        if (local3dFractal) {
-            ImGui.text(String.format(Locale.US,"Points: %,d", pointCount));
-        }
 
+
+        if (local3dFractal) {
+            ImGui.text(String.format(Locale.US, "Points: %,d", pointCount));
+        }
+        ImGui.pushItemWidth(250);
         ImGui.inputText("Input", functionInput);
         if (ImGui.button("compile Function")) {
             System.out.println("Text entered: " + functionInput.get());
@@ -158,8 +165,9 @@ public class GuiLayer {
             System.out.println("GLSL Code injection: " + function);
             newFunction = true;
             polynomialDegree = codeEdit.highestPolynomial;
-        } else newFunction = false;
 
+        }
+        ImGui.pushItemWidth(0);
         if (ImGui.checkbox("custom q Zero", booleanQZeroC)) {
             booleanQZeroC = !booleanQZeroC;
             qZeroC = (booleanQZeroC) ? 1 : 0;
@@ -237,6 +245,7 @@ public class GuiLayer {
                         range = FractalRange.floatValue();
                     }
 
+
                     if (ImGui.inputInt("normal Precision", normalPrecisionStart)) {
                         normalPrecision = normalPrecisionStart.intValue();
                     }
@@ -247,8 +256,17 @@ public class GuiLayer {
                         quadSize = quadSizeStart[0];
                     }
                     if (ImGui.inputInt("Resolution\nRecommend: (16-32)", workGroupDimensionStart)) {
-                        workGroupDimension = workGroupDimensionStart.intValue();
+                        cDimensions[0] = workGroupDimensionStart.intValue();
+                        cDimensions[1] = workGroupDimensionStart.intValue();
+                        cDimensions[2] = workGroupDimensionStart.intValue();
                     }
+                    if (ImGui.checkbox("Custom XYZ Resolution", customDimensions)) {
+                        customDimensions = !customDimensions;
+                    }
+                    if (customDimensions) {
+                        ImGui.inputInt3("Custom XYZ Input", cDimensions);
+                    }
+
                     if (ImGui.button("invert")) {
                         reverse = (reverse + 1) % 2;
                     }

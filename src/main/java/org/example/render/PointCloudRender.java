@@ -26,7 +26,8 @@ public class PointCloudRender {
     private int pointCount;
 
     private final float range;
-    private final int workGroupDimension;
+    private final int[] dimensions = new int[3];
+    //private final int workGroupDimension;
     private final int totalThreadDimension;
     private final int totalThreads;
 
@@ -42,9 +43,17 @@ public class PointCloudRender {
 
     public PointCloudRender(SceneSettings sceneSettings) {
         this.sceneSettings = sceneSettings;
-        workGroupDimension = sceneSettings.workGroupDimension;
-        totalThreadDimension = workGroupDimension * sceneSettings.threadDimension;
-        totalThreads = totalThreadDimension * totalThreadDimension * totalThreadDimension;
+        //workGroupDimension = sceneSettings.workGroupDimension;
+        //totalThreadDimension = workGroupDimension * sceneSettings.threadDimension;
+        //totalThreads =  totalThreadDimension * totalThreadDimension * totalThreadDimension;
+
+        dimensions[0] = sceneSettings.workGroupDimensionX;
+        dimensions[1] = sceneSettings.workGroupDimensionY;
+        dimensions[2] = sceneSettings.workGroupDimensionZ;
+
+        totalThreadDimension = dimensions[0] * sceneSettings.threadDimension;
+        totalThreads = dimensions[0] * sceneSettings.threadDimension * dimensions[1] * sceneSettings.threadDimension * dimensions[2] * sceneSettings.threadDimension;
+
         range = sceneSettings.range;
         width = sceneSettings.width;
         height = sceneSettings.height;
@@ -109,6 +118,8 @@ public class PointCloudRender {
         glUniform1i(glGetUniformLocation(id, "vertexArrayLength"), totalThreads);
         glUniform1i(glGetUniformLocation(id, "gridDensity"), gridDensity);
         glUniform1f(glGetUniformLocation(id, "range"), range);
+        glUniform3f(glGetUniformLocation(id, "ranges"), 1, 1 * ((float) dimensions[1] /dimensions[0]), 1 * ((float) dimensions[2] /dimensions[0]));
+
 
         glUniform1f(glGetUniformLocation(id, "timeSin"), guiLayer.time);
         glUniform1i(glGetUniformLocation(id, "u_qZeroC"), guiLayer.qZeroC);
@@ -126,7 +137,10 @@ public class PointCloudRender {
         System.out.print("total threads: ");
         System.out.printf(Locale.US, "%,d", totalThreads);
 
-        glDispatchCompute(workGroupDimension, workGroupDimension, workGroupDimension);
+        glDispatchCompute(dimensions[0], dimensions[1], dimensions[2]);
+        //glDispatchCompute(workGroupDimension, workGroupDimension, workGroupDimension);
+
+
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
         //------------------------------Second Pass---------------------------------------------
@@ -136,7 +150,9 @@ public class PointCloudRender {
         glUniform1i(glGetUniformLocation(id, "vertexArrayLength"), pointCount);
         glUniform1i(glGetUniformLocation(id, "u_pass"), 1);
 
-        glDispatchCompute(workGroupDimension, workGroupDimension, workGroupDimension);
+        glDispatchCompute(dimensions[0], dimensions[1], dimensions[2]);
+        //glDispatchCompute(workGroupDimension, workGroupDimension, workGroupDimension);
+
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
         computeShaderProgram.cleanup();
@@ -245,9 +261,11 @@ public class PointCloudRender {
 
     public static class SceneSettings {
         public float range = 1f;
-        public int workGroupDimension = 16;
         public int threadDimension = 10;
         public int width = 1920;
         public int height = 1080;
+        public int workGroupDimensionX = 16;
+        public int workGroupDimensionY = 16;
+        public int workGroupDimensionZ = 16;
     }
 }

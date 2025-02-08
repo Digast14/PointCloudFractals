@@ -16,7 +16,6 @@ public class Engine {
     private final IAppLogic appLogic;
     private final GuiLayer guiLayer;
 
-
     public Engine(String WindowTitle, int width, int height, IAppLogic appLogic ) {
         window = new Window(WindowTitle, width, height, () -> {
             resize();
@@ -36,7 +35,6 @@ public class Engine {
         double frameRate = 1.0d / (double) maxFPS;
         double previous = glfwGetTime();
         double steps = 0.0;
-
 
         init();
 

@@ -31,6 +31,7 @@ public class WorldRender {
         pointCloudSettings = new PointCloudRender.SceneSettings();
         pointCloudSettings.width = window.getWidth();
         pointCloudSettings.height = window.getHeight();
+
         pointCloudRender = new PointCloudRender(pointCloudSettings);
     }
 
@@ -74,7 +75,10 @@ public class WorldRender {
 
     private void updatePointCloudSettings(GuiLayer guiLayer) {
         pointCloudSettings.range = guiLayer.range;
-        pointCloudSettings.workGroupDimension = guiLayer.workGroupDimension;
+        pointCloudSettings.workGroupDimensionX = guiLayer.cDimensions[0];
+        pointCloudSettings.workGroupDimensionY = guiLayer.cDimensions[1];
+        pointCloudSettings.workGroupDimensionZ = guiLayer.cDimensions[2];
+
     }
 
 

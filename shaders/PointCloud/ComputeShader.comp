@@ -17,6 +17,8 @@ layout (std430, binding = 2) buffer GlobalIndex {
 uniform int vertexArrayLength;
 uniform int gridDensity;
 uniform float range;
+uniform vec3 ranges;
+
 
 
 uniform float timeSin;
@@ -216,7 +218,9 @@ vec3 calculateNormal(in vec3 p)
 
 void main() {
     ivec3 gridIndex = ivec3(gl_GlobalInvocationID);
-    vec3 pos = (vec3(gridIndex) / float(gridDensity)) - vec3(range);
+    //vec3 pos = (vec3(gridIndex) / float(gridDensity)) - vec3(range);
+    vec3 pos = (vec3(gridIndex) / float(gridDensity)) - ranges * range;
+
 
     if (JuliaSet(pos) > 0) {
         return;

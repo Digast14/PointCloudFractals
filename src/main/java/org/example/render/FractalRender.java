@@ -76,7 +76,9 @@ public class FractalRender {
         if (guiLayer.newFunction) {
             shaderProgram.editShader(GL_FRAGMENT_SHADER, GL_VERTEX_SHADER, guiLayer.function);
             createUniforms();
+            guiLayer.newFunction = false;
         }
+
     }
 
     private void createUniforms() {
