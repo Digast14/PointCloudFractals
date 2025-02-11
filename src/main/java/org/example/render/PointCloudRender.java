@@ -25,11 +25,10 @@ public class PointCloudRender {
     private int globalIndexBuffer;
     private int pointCount;
 
-    private final float range;
-    private final int[] dimensions = new int[3];
-    //private final int workGroupDimension;
-    private final int totalThreadDimension;
-    private final int totalThreads;
+    private float range;
+    private int[] dimensions = new int[3];
+    private int totalThreadDimension;
+    private int totalThreads;
 
     private int width;
     private int height;
@@ -37,16 +36,13 @@ public class PointCloudRender {
     private int depthTexture;
     private int fbo;
 
+    private int cubemapTexture;
+
 
     private UniformsMap uniformsMap;
     private PostProcessRender postProcessRender;
 
-    public PointCloudRender(SceneSettings sceneSettings) {
-        this.sceneSettings = sceneSettings;
-        //workGroupDimension = sceneSettings.workGroupDimension;
-        //totalThreadDimension = workGroupDimension * sceneSettings.threadDimension;
-        //totalThreads =  totalThreadDimension * totalThreadDimension * totalThreadDimension;
-
+    private void setSettings(){
         dimensions[0] = sceneSettings.workGroupDimensionX;
         dimensions[1] = sceneSettings.workGroupDimensionY;
         dimensions[2] = sceneSettings.workGroupDimensionZ;
@@ -59,10 +55,14 @@ public class PointCloudRender {
         height = sceneSettings.height;
     }
 
+    public PointCloudRender(SceneSettings sceneSettings) {
+        this.sceneSettings = sceneSettings;
+        setSettings();
+    }
+
 
     public void initShaders(GuiLayer guiLayer) {
         computeShaderProgram = new ShaderProgramm("shaders/PointCloud/ComputeShader.comp", GL_COMPUTE_SHADER);
-        if (!guiLayer.function.isEmpty()) computeShaderProgram.editShader(GL_COMPUTE_SHADER, 0, guiLayer.function);
         shaderProgram = new ShaderProgramm("shaders/PointCloud/vertexShader.vert", GL_VERTEX_SHADER, "shaders/PointCloud/fragmentShader.frag", GL_FRAGMENT_SHADER);
         System.out.println("Compute Shader ID: " + computeShaderProgram.getProgramID());
         System.out.println("Vertex Shader ID: " + shaderProgram.getProgramID());
@@ -71,8 +71,19 @@ public class PointCloudRender {
         dispatchCompute(guiLayer);
         dispatchVertex();
 
-        postProcessRender = new PostProcessRender(texture);
+        postProcessRender = new PostProcessRender(texture, depthTexture);
 
+        guiLayer.setPointCount(pointCount);
+    }
+
+    public void recompile(GuiLayer guiLayer) {
+        computeShaderProgram.editShader(GL_COMPUTE_SHADER, 0, guiLayer.function);
+
+        setSettings();
+        glDeleteBuffers(ssbo);
+        glDeleteBuffers(normalBuffer);
+        createIndexBuffer();
+        dispatchCompute(guiLayer);
         guiLayer.setPointCount(pointCount);
     }
 
@@ -112,15 +123,37 @@ public class PointCloudRender {
 
 
     private void dispatchCompute(GuiLayer guiLayer) {
-        int gridDensity = (int) (totalThreadDimension / (range * 2));
         int id = computeShaderProgram.getProgramID();
+
         glUseProgram(id);
+        parseComputeUniform(id, guiLayer);
+
+        System.out.print("total threads: ");
+        System.out.printf(Locale.US, "%,d", totalThreads);
+        System.out.println();
+
+        glDispatchCompute(dimensions[0], dimensions[1], dimensions[2]);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+
+        //------------------------------Second Pass---------------------------------------------
+        setPointCountReset();
+        createPointBuffers();
+
+        glUniform1i(glGetUniformLocation(id, "vertexArrayLength"), pointCount);
+        glUniform1i(glGetUniformLocation(id, "u_pass"), 1);
+
+        glDispatchCompute(dimensions[0], dimensions[1], dimensions[2]);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+
+        computeShaderProgram.cleanup();
+    }
+
+    private void parseComputeUniform(int id,GuiLayer guiLayer){
+        int gridDensity = (int) (totalThreadDimension / (range * 2));
         glUniform1i(glGetUniformLocation(id, "vertexArrayLength"), totalThreads);
         glUniform1i(glGetUniformLocation(id, "gridDensity"), gridDensity);
         glUniform1f(glGetUniformLocation(id, "range"), range);
-        glUniform3f(glGetUniformLocation(id, "ranges"), 1, 1 * ((float) dimensions[1] /dimensions[0]), 1 * ((float) dimensions[2] /dimensions[0]));
-
-
+        glUniform3f(glGetUniformLocation(id, "ranges"), 1, 1 * ((float) dimensions[1] / dimensions[0]), 1 * ((float) dimensions[2] / dimensions[0]));
         glUniform1f(glGetUniformLocation(id, "timeSin"), guiLayer.time);
         glUniform1i(glGetUniformLocation(id, "u_qZeroC"), guiLayer.qZeroC);
         glUniform4f(glGetUniformLocation(id, "u_qZero"), guiLayer.qZero.x, guiLayer.qZero.y, guiLayer.qZero.z, guiLayer.qZero.w);
@@ -132,31 +165,8 @@ public class PointCloudRender {
         glUniform1f(glGetUniformLocation(id, "u_normalStepSize"), guiLayer.normalStepSize);
         glUniform1i(glGetUniformLocation(id, "u_power"), guiLayer.power);
         glUniform1i(glGetUniformLocation(id, "u_pass"), 0);
-
-
-        System.out.print("total threads: ");
-        System.out.printf(Locale.US, "%,d", totalThreads);
-
-        glDispatchCompute(dimensions[0], dimensions[1], dimensions[2]);
-        //glDispatchCompute(workGroupDimension, workGroupDimension, workGroupDimension);
-
-
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
-
-        //------------------------------Second Pass---------------------------------------------
-        setPointCountReset();
-        createPointBuffers();
-
-        glUniform1i(glGetUniformLocation(id, "vertexArrayLength"), pointCount);
-        glUniform1i(glGetUniformLocation(id, "u_pass"), 1);
-
-        glDispatchCompute(dimensions[0], dimensions[1], dimensions[2]);
-        //glDispatchCompute(workGroupDimension, workGroupDimension, workGroupDimension);
-
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
-
-        computeShaderProgram.cleanup();
     }
+
 
     private void dispatchVertex() {
         shaderProgram.bind();
@@ -196,11 +206,18 @@ public class PointCloudRender {
         int depthTexture = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, depthTexture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D, 0);
         return depthTexture;
     }
 
-    public void resize(int width, int height){
+    public void resize(int width, int height) {
+        sceneSettings.width = width;
+        sceneSettings.height = height;
+
         glBindTexture(GL_TEXTURE_2D, texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glBindTexture(GL_TEXTURE_2D, depthTexture);
@@ -227,20 +244,28 @@ public class PointCloudRender {
     public void render(GuiLayer guiLayer, Camera camera) {
         shaderProgram.bind();
         parseUniform(guiLayer, camera);
+
         renderToFBO();
+
         shaderProgram.unbind();
-        postProcessRender.render(sceneSettings, guiLayer);
+        postProcessRender.render(sceneSettings, guiLayer, camera);
     }
+
+
+
+
 
 
     private void renderToFBO() {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glDrawArrays(GL_POINTS, 0, pointCount-1);
+        glDrawArrays(GL_POINTS, 0, pointCount - 1);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
+
 
 
     private void parseUniform(GuiLayer guiLayer, Camera camera) {

@@ -9,12 +9,14 @@ import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.opengl.GL11.GL_NO_ERROR;
 import static org.lwjgl.opengl.GL11.glGetError;
 
+
 public class Engine {
 
     private final Window window;
     private final WorldRender render;
     private final IAppLogic appLogic;
     private final GuiLayer guiLayer;
+
 
     public Engine(String WindowTitle, int width, int height, IAppLogic appLogic ) {
         window = new Window(WindowTitle, width, height, () -> {
@@ -37,8 +39,6 @@ public class Engine {
         double steps = 0.0;
 
         init();
-
-
         while (!glfwWindowShouldClose(window.getWindowPointer())) {
             glfwPollEvents();
 
@@ -54,20 +54,23 @@ public class Engine {
                 render.update(guiLayer);
             }
 
+            int error = glGetError();
+            if (error != GL_NO_ERROR) System.err.println("OpenGL Error (Engine): " + error);
+
             guiLayer.setFPs((int) (1000/(elapsed*1000.0)));
             render.render(guiLayer, window);
-            int error = glGetError();
-            if (error != GL_NO_ERROR) {
-                System.err.println("OpenGL Error: " + error);
-            }
+
             glfwSwapBuffers(window.getWindowPointer());
         }
         cleanup();
     }
 
+
+
     public void init(){
         render.getPointCloudRender().initShaders(guiLayer);
     }
+
 
     private void resize() {
         int width = window.getWidth();

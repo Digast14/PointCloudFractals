@@ -14,8 +14,7 @@ public class WorldRender {
 
     private final Camera camera;
     private final GuiRender guiRender;
-    private PointCloudRender pointCloudRender;
-
+    private final PointCloudRender pointCloudRender;
     private final FractalRender fractalRender;
     private final PointCloudRender.SceneSettings pointCloudSettings;
 
@@ -25,32 +24,27 @@ public class WorldRender {
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-        camera = new Camera(window.getWidth(), window.getHeight());
-        guiRender = new GuiRender(window);
-        fractalRender = new FractalRender();
         pointCloudSettings = new PointCloudRender.SceneSettings();
         pointCloudSettings.width = window.getWidth();
         pointCloudSettings.height = window.getHeight();
 
         pointCloudRender = new PointCloudRender(pointCloudSettings);
+        fractalRender = new FractalRender();
+        guiRender = new GuiRender(window);
+        camera = new Camera(window.getWidth(), window.getHeight());
     }
 
 
     public void resize(int width, int height) {
         camera.resize(width, height);
         pointCloudRender.resize(width, height);
-        pointCloudSettings.width = width;
-        pointCloudSettings.height = height;
     }
 
 
     public void update(GuiLayer guiLayer) {
         updatePointCloudSettings(guiLayer);
-
         if (guiLayer.newFunction && guiLayer.local3dFractal) {
-            pointCloudRender.cleanup();
-            pointCloudRender = new PointCloudRender(pointCloudSettings);
-            pointCloudRender.initShaders(guiLayer);
+            pointCloudRender.recompile(guiLayer);
             guiLayer.newFunction = false;
         }
 
@@ -70,6 +64,7 @@ public class WorldRender {
         else fractalRender.render(camera, guiLayer, window);
 
         guiRender.render(guiLayer);
+
     }
 
 

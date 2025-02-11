@@ -19,6 +19,11 @@ public class Projection {
         return projMatrix;
     }
 
+    public Matrix4f getInProjMatrix() {
+        Matrix4f inv = new Matrix4f(projMatrix);
+        return inv.invert();
+    }
+
     public void updateProjMatrix(int width, int height) {
         projMatrix.setPerspective(FOV, (float) width / height, Z_NEAR, Z_FAR);
     }

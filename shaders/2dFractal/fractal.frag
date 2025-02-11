@@ -87,18 +87,21 @@ vec4 qdiv(in vec4 a, in vec4 b) {
 
 //expanded functions
 vec4 qsin(vec4 q) {
+    if(q==vec4(0)) return vec4(0);
     float a = q.x;
     vec3 v = vec3(q.yzw);
     float vabs = length(v);
     return vec4(sin(a) * cosh(vabs), cos(a) * sinh((vabs)) * v / vabs);
 }
 vec4 qcos(vec4 q) {
+    if(q==vec4(0)) return vec4(0);
     float a = q.x;
     vec3 v = vec3(q.yzw);
     float vabs = length(v);
     return vec4(cos(a) * cosh(vabs), -sin(a) * sinh((vabs)) * v / vabs);
 }
 vec4 qexp(vec4 q) {
+    if(q==vec4(0)) return vec4(0);
     if (dot(q, q) == 0) return vec4(0);
     float expA = exp(q.x);
     vec3 v = vec3(q.yzw);
@@ -107,6 +110,7 @@ vec4 qexp(vec4 q) {
 }
 
 vec4 qln(vec4 q) {
+    if(q==vec4(0)) return vec4(0);
     if (dot(q, q) == 0) return vec4(0);
     float qabs = length(q);
     float ln = log(qabs);
@@ -147,7 +151,6 @@ void calculateRootsOfUnity(int m, out vec4 roots[int(roootN)]) {
 vec4 javaFunction(vec4 q, vec4 c) {
     return /**/qsin(q);
 }
-
 
 
 
@@ -242,8 +245,8 @@ void main() {
     calculateRootsOfUnity(int(roootN), roots);
 
     float aspectRatio = u_resolution.x / u_resolution.y;
-    vec2 uv = vec2(((gl_FragCoord.x / u_resolution.y) - (aspectRatio) * 0.5), ((gl_FragCoord.y / u_resolution.y) - 0.5));
-    vec3 ro = vec3(-u_origin.z, -u_origin.x, u_origin.y);
+    vec2 uv = vec2(((gl_FragCoord.x / u_resolution.y) - (aspectRatio) * 0.5), -((gl_FragCoord.y / u_resolution.y) - 0.5));
+    vec3 ro = vec3(-u_origin.z, u_origin.x, u_origin.y);
 
     vec3 color;
 

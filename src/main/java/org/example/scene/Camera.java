@@ -148,6 +148,9 @@ public class Camera {
     public Matrix4f getProjectionMatrix() {
         return projection.getProjMatrix();
     }
+    public Matrix4f getInvProjectionMatrix() {
+        return projection.getInProjMatrix();
+    }
 
     public void resize(int resX, int resY) {
         projection.updateProjMatrix(resX, resY);

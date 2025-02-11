@@ -72,28 +72,32 @@ vec4 qdiv(in vec4 a, in vec4 b) {
     (a.x * bConjugate.w + a.y * bConjugate.z - a.z * bConjugate.y + a.w * bConjugate.x) / normSquared
     );
 }
-
 //expanded functions
 vec4 qsin(vec4 q) {
+    if (q == vec4(0)) return vec4(0);
     float a = q.x;
     vec3 v = vec3(q.yzw);
     float vabs = length(v);
     return vec4(sin(a) * cosh(vabs), cos(a) * sinh((vabs)) * v / vabs);
 }
 vec4 qcos(vec4 q) {
+    if (q == vec4(0)) return vec4(0);
     float a = q.x;
     vec3 v = vec3(q.yzw);
     float vabs = length(v);
     return vec4(cos(a) * cosh(vabs), -sin(a) * sinh((vabs)) * v / vabs);
 }
 vec4 qexp(vec4 q) {
+    if (q == vec4(0)) return vec4(0);
     if (dot(q, q) == 0) return vec4(0);
     float expA = exp(q.x);
     vec3 v = vec3(q.yzw);
     float vabs = length(v);
     return vec4(expA * cos(vabs), expA * (v / vabs * sin(vabs)));
 }
+
 vec4 qln(vec4 q) {
+    if (q == vec4(0)) return vec4(0);
     if (dot(q, q) == 0) return vec4(0);
     float qabs = length(q);
     float ln = log(qabs);
@@ -102,17 +106,18 @@ vec4 qln(vec4 q) {
     float vabs = length(v);
     return vec4(ln, (v / vabs) * acos(a / qabs));
 }
+
 vec4 qpow(vec4 q, float n) {
-    if (n.x == 2) return qmul(q, q);
+    if (n == 2) return qmul(q, q);
     if (n.x == 3) return qmul(qmul(q, q), q);
     return qexp(n * qln(q));
 }
+
 vec4 qpow(vec4 q, vec4 n) {
     if (n.x == 2) return qmul(q, q);
     if (n.x == 3) return qmul(qmul(q, q), q);
     return qexp(n.x * qln(q));
 }
-
 
 
 //------------------------------------------------
@@ -122,8 +127,16 @@ vec4 javaFunction(vec4 q, vec4 c) {
 }
 
 
+//testSets
+float sphere(in vec3 c) {
+    if (length(c) < 1) return 0;
+    else return 1;
+}
+float cube(in vec3 c) {
+    if (c.x < 0.5 && c.x > -0.5 && c.y < 0.5 && c.y > -0.5 && c.z < 0.5 && c.z > -0.5) return 0;
+    else return 1;
+}
 
-int mode = 0;
 
 int JuliaSet(in vec3 c) {
     vec4 z;
@@ -135,89 +148,45 @@ int JuliaSet(in vec3 c) {
         z = u_qZero;
         zNudge = u_qZero;
     }
-
     for (int iteration = 0; iteration < u_maxIteration; iteration++) {
         z = javaFunction(z, vec4(c, 0));
         zNudge = javaFunction(zNudge, vec4(c, 0) + vec4(c, 0) * u_nudgeValue);
         if (length(z - zNudge) > 1.0 && (iteration > u_maxIteration * u_breakoutFactor)) {
-            if (mode == 0)return abs(u_reverse);
-            return abs(u_reverse - 1);
+            return abs(u_reverse);
         }
     }
-    if (mode == 0) return abs(u_reverse - 1);
-    return abs(u_reverse);
-
-
+    return abs(u_reverse - 1);
 }
 
-vec3 calculateNormal(in vec3 p)
-{
-    mode = 1;
 
-    int gradient_x = 0;
-    int gradient_y = 0;
-    int gradient_z = 0;
+vec3 calculateNormal(in vec3 p) {
+    float gradient_x = 0;
+    float gradient_y = 0;
+    float gradient_z = 0;
 
     vec3 small_step = vec3(0);
     float relativeStepSize = u_normalStepSize * range;
 
-
-    if (true) {
-        for (int i = 0; i < u_normalPrecision; i++) {
-            small_step += vec3(relativeStepSize, 0, 0); //*range
-            gradient_x += JuliaSet(p + small_step.xyy) - JuliaSet(p - small_step.xyy);
-            gradient_y += JuliaSet(p + small_step.yxy) - JuliaSet(p - small_step.yxy);
-            gradient_z += JuliaSet(p + small_step.yyx) - JuliaSet(p - small_step.yyx);
-        }
-    } else {
-        vec3 small_step = vec3(relativeStepSize, 0, 0); //*range
-
-        for (int i = 1; i <= u_normalPrecision; i++) {
-            int xResult = JuliaSet(p + vec3(relativeStepSize, 0, 0) * i);
-            if (xResult == 0) break;
-            gradient_x += xResult;
-
-        }
-        for (int i = 1; i <= u_normalPrecision; i++) {
-            int xResultN = JuliaSet(p - vec3(relativeStepSize, 0, 0) * i);
-            if (xResultN == 0) break;
-            gradient_x -= xResultN;
-        }
-
-
-        for (int i = 1; i <= u_normalPrecision; i++) {
-            int yResult = JuliaSet(p + small_step.yxy * i);
-            if (yResult == 0) break;
-            gradient_y += yResult;
-        }
-        for (int i = 1; i <= u_normalPrecision; i++) {
-            int yResultN = JuliaSet(p - small_step.yxy * i);
-            if (yResultN == 0) break;
-            gradient_y -= yResultN;
-        }
-
-
-        for (int i = 1; i <= u_normalPrecision; i++) {
-            int zResult = JuliaSet(p + small_step.yyx * i);
-            if (zResult == 0) break;
-            gradient_z += zResult;
-        }
-        for (int i = 1; i <= u_normalPrecision; i++) {
-            int zResultN = JuliaSet(p - small_step.yyx * i);
-            if (zResultN == 0) break;
-            gradient_z -= zResultN;
-        }
+    for (int i = 0; i < u_normalPrecision; i++) {
+        small_step += vec3(relativeStepSize, 0, 0); //*range
+        gradient_x += JuliaSet(p + small_step.xyy);
+        gradient_y += JuliaSet(p + small_step.yxy);
+        gradient_z += JuliaSet(p + small_step.yyx);
+        gradient_x -= JuliaSet(p - small_step.xyy);
+        gradient_y -= JuliaSet(p - small_step.yxy);
+        gradient_z -= JuliaSet(p - small_step.yyx);
     }
 
-
-    vec3 normal = vec3(gradient_x, gradient_y, gradient_z) / u_normalPrecision;
+    vec3 normal = vec3(gradient_x, gradient_y, gradient_z);
+    normal = normalize(normal);
     if (dot(normal, normal) == 0) return vec3(0.1);
-    else return normalize(normal);
+    else return (normal + vec3(1)) * 0.5;
 }
 
 
 void main() {
-    ivec3 gridIndex = ivec3(gl_GlobalInvocationID);
+    ivec3 gridIndex = ivec3(gl_GlobalInvocationID.xyz);
+
     //vec3 pos = (vec3(gridIndex) / float(gridDensity)) - vec3(range);
     vec3 pos = (vec3(gridIndex) / float(gridDensity)) - ranges * range;
 
@@ -228,7 +197,7 @@ void main() {
         uint currentIndex = atomicAdd(globalIndex, 1);
         if (u_pass == 1) {
             if (currentIndex < vertexArrayLength) {
-                points[currentIndex + 1] = pos;
+                points[currentIndex + 1] = pos.xyz;
                 normals[currentIndex + 1] = calculateNormal(pos);
             }
         }

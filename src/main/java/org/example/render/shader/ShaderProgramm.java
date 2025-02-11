@@ -34,13 +34,16 @@ public class ShaderProgramm {
     }
 
     public void editShader(int editType, int otherType, String replacement) {
-        glDeleteProgram(programID);
+        if (programID != 0) glDeleteProgram(programID);
+
+
         String source = readFile(sourceCodes.get(editType));
         String sourceEdit = source.replace("/**/qsin(q)", replacement);
 
         int shaderEdit = glCreateShader(editType);
         glShaderSource(shaderEdit, sourceEdit);
         glCompileShader(shaderEdit);
+
 
         if (glGetShaderi(shaderEdit, GL_COMPILE_STATUS) == GL_FALSE) {
             System.err.println("Failed to compile shader: " + glGetShaderInfoLog(shaderEdit));
@@ -49,22 +52,21 @@ public class ShaderProgramm {
             glCompileShader(shaderEdit);
         }
 
-        if(sourceCodes.size()==1){
+        if (sourceCodes.size() == 1) {
             int shader1 = shaderEdit;
             programID = createProgram(shader1);
             glDeleteShader(shader1);
         }
 
-        if(sourceCodes.size()==2){
+        if (sourceCodes.size() == 2) {
             int shader1 = shaderEdit;
-            int shader2 = createShaderFromSource(readFile(sourceCodes.get(otherType)),otherType);
+            int shader2 = createShaderFromSource(readFile(sourceCodes.get(otherType)), otherType);
             programID = createProgram(shader1, shader2);
             glDeleteShader(shader1);
         }
+
         System.out.println("succesful recompile of shader:" + programID);
     }
-
-
 
 
     private static int createShaderFromSource(String source, int type) {
@@ -125,6 +127,7 @@ public class ShaderProgramm {
         unbind();
         if (programID != 0) {
             glDeleteProgram(programID);
+            programID = 0;
         }
     }
 }

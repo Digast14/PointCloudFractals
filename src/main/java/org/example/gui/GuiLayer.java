@@ -131,6 +131,7 @@ public class GuiLayer {
     }
 
     //blur
+    private ImInt blurStart = new ImInt(0);
     public int blur = 0;
 
     //point Count
@@ -255,11 +256,14 @@ public class GuiLayer {
                     if (ImGui.sliderInt("Quadsize", quadSizeStart, 1, 15)) {
                         quadSize = quadSizeStart[0];
                     }
-                    if (ImGui.inputInt("Resolution\nRecommend: (16-32)", workGroupDimensionStart)) {
-                        cDimensions[0] = workGroupDimensionStart.intValue();
-                        cDimensions[1] = workGroupDimensionStart.intValue();
-                        cDimensions[2] = workGroupDimensionStart.intValue();
+                    if(!customDimensions){
+                        if (ImGui.inputInt("Resolution\nRecommend: (16-32)", workGroupDimensionStart)) {
+                            cDimensions[0] = workGroupDimensionStart.intValue();
+                            cDimensions[1] = workGroupDimensionStart.intValue();
+                            cDimensions[2] = workGroupDimensionStart.intValue();
+                        }
                     }
+
                     if (ImGui.checkbox("Custom XYZ Resolution", customDimensions)) {
                         customDimensions = !customDimensions;
                     }
@@ -270,9 +274,10 @@ public class GuiLayer {
                     if (ImGui.button("invert")) {
                         reverse = (reverse + 1) % 2;
                     }
-                    if (ImGui.button("blur")) {
-                        blur = (blur + 1) % 2;
+                    if(ImGui.inputInt("Post process mode", blurStart)){
+                        blur = blurStart.get();
                     }
+
                 }
             } else {
                 if (ImGui.inputInt("Max Range Iteration", maxIterationStartRange)) {
