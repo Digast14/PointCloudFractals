@@ -105,8 +105,8 @@ public class GuiLayer {
     public int normalPrecision = 20;
 
     //normal step Size
-    private final ImFloat normalStepSizeStart = new ImFloat(0.005f);
-    public float normalStepSize = 0.005f;
+    private final ImFloat normalStepSizeStart = new ImFloat(0.02f);
+    public float normalStepSize = 0.02f;
 
     //quadSize
     private final int[] quadSizeStart = {4};
@@ -114,7 +114,6 @@ public class GuiLayer {
 
     //quadSize
     private final ImInt workGroupDimensionStart = new ImInt(16);
-    public int workGroupDimension = 16;
 
     //Reverse
     public int reverse = 0;

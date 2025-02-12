@@ -2,10 +2,8 @@
 
 out vec4 FragColor;
 
-in vec3 exColour;
+in vec3 normalColor;
 
-void main()
-{
-    FragColor = vec4(exColour,1);
-
+void main() {
+    FragColor = vec4(normalColor,1);
 }

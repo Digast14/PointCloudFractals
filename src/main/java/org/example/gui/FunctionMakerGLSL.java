@@ -87,11 +87,11 @@ public class FunctionMakerGLSL {
                 }
                 _inputStack.pop();
             } else if (_inputStack.peek().charAt(0) == '_') {
-                if (Objects.equals(_inputStack.peek(), "_(")) {
+                if (Objects.equals(_inputStack.peek(), "_((")) {
                     opStack.push(_inputStack.peek());
                     _inputStack.pop();
                 } else if (Objects.equals(_inputStack.peek(), "_)")) {
-                    while (!Objects.equals(opStack.peek(), "_(")) {
+                    while (!Objects.equals(opStack.peek(), "_((")) {
                         sortedTokenStack.push(opStack.peek());
                         opStack.pop();
                     }
@@ -184,7 +184,7 @@ public class FunctionMakerGLSL {
                     case '-' -> tokenStack.push("_minus");
                     case '*' -> tokenStack.push("_qmul");
                     case '/' -> tokenStack.push("_qdiv");
-                    case '(' -> tokenStack.push("_(");
+                    case '(' -> tokenStack.push("_((");
                     case ')' -> tokenStack.push("_)");
                     case '^' -> {
                         tokenStack.push("_qpow");
@@ -203,7 +203,7 @@ public class FunctionMakerGLSL {
             case "_plus", "_minus" -> operatorPrecedence = 2;
             case "_qmul", "_qdiv" -> operatorPrecedence = 3;
             case "_qpow" -> operatorPrecedence = 5;
-            case "_(" -> operatorPrecedence = 1;
+            case "_((" -> operatorPrecedence = 1;
             case "_)" -> operatorPrecedence = 10;
         }
         return operatorPrecedence;

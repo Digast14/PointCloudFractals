@@ -14,25 +14,26 @@ import static org.lwjgl.stb.STBImage.stbi_load;
 
 public class PostProcessRender {
 
-    private ShaderProgramm postProcessingProgram;
+    private final ShaderProgramm postProcessingProgram;
+    private final UniformsMap uniformsMap;
 
-    private int texture;
-    private int depthTexture;
-    private int cubemapTexture;
+    private final int texture;
+    private final int depthTexture;
+    private final int cubeMapTexture;
 
     private int vaoId;
     private int vertexBuffer;
     private int indexBuffer;
 
-    private UniformsMap uniformsMap;
-
     public PostProcessRender(int texture, int depthTexture) {
+        postProcessingProgram = new ShaderProgramm("shaders/PostProcessing/PostProcessingVert.vert", GL_VERTEX_SHADER, "shaders/PostProcessing/PostProcessingFrag.frag", GL_FRAGMENT_SHADER);
+        uniformsMap = createUniform();
+
         this.texture = texture;
         this.depthTexture = depthTexture;
-        postProcessingProgram = new ShaderProgramm("shaders/PostProcessing/PostProcessingVert.vert", GL_VERTEX_SHADER, "shaders/PostProcessing/PostProcessingFrag.frag", GL_FRAGMENT_SHADER);
+        cubeMapTexture = createCubeMapTexture();
+
         createBuffers();
-        createCubeMapTexture();
-        createUniform();
     }
 
 
@@ -66,13 +67,14 @@ public class PostProcessRender {
     }
 
 
-    public void createCubeMapTexture() {
-        cubemapTexture = glGenTextures();
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+    private int createCubeMapTexture() {
+        int cubeMapTexture = glGenTextures();
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
         int[] width = {2048};
         int[] height = {2048};
         int[] nrChannels = {3};
         String[] faces = {"textures/sky/right.jpg", "textures/sky/left.jpg", "textures/sky/top.jpg", "textures/sky/bottom.jpg", "textures/sky/front.jpg", "textures/sky/back.jpg"};
+        //String[] faces = {"textures/jpn/posx.jpg", "textures/jpn/negx.jpg", "textures/jpn/posy.jpg", "textures/jpn/negy.jpg", "textures/jpn/posz.jpg", "textures/jpn/negz.jpg"};
         for (int i = 0; i < faces.length; i++) {
             ByteBuffer data = stbi_load(faces[i], width, height, nrChannels, 0);
             if(data != null){
@@ -88,18 +90,21 @@ public class PostProcessRender {
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        return cubeMapTexture;
     }
 
-    private void createUniform(){
-        uniformsMap = new UniformsMap(postProcessingProgram.getProgramID());
+
+    private UniformsMap createUniform(){
+        UniformsMap uniformsMap = new UniformsMap(postProcessingProgram.getProgramID());
         uniformsMap.createUniform("mode");
         uniformsMap.createUniform("u_resolution");
         uniformsMap.createUniform("projection");
         uniformsMap.createUniform("backgroundColor");
         uniformsMap.createUniform("camPosition");
         uniformsMap.createUniform("view");
-
+        return uniformsMap;
     }
+
 
     private void parseUniform(PointCloudRender.SceneSettings sceneSettings, GuiLayer guiLayer, Camera camera) {
         uniformsMap.setUniform("mode", guiLayer.blur);
@@ -108,16 +113,13 @@ public class PostProcessRender {
         uniformsMap.setUniform("backgroundColor", guiLayer.color3);
         uniformsMap.setUniform("camPosition", camera.getPosition());
         uniformsMap.setUniform("view", camera.getViewMatrix());
-
     }
-
 
 
     public void render(PointCloudRender.SceneSettings sceneSettings, GuiLayer guiLayer, Camera camera) {
         postProcessingProgram.bind();
         int id = postProcessingProgram.getProgramID();
         parseUniform(sceneSettings,guiLayer,camera);
-
 
         glUniform1i(glGetUniformLocation(id, "colorTexture"), 0);
         glActiveTexture(GL_TEXTURE0);
@@ -129,7 +131,7 @@ public class PostProcessRender {
 
         glUniform1i(glGetUniformLocation(id, "environmentMap"), 2);
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
 
         glBindVertexArray(vaoId);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
