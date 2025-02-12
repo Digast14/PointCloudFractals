@@ -1,6 +1,11 @@
 package org.example;
 
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.opengl.GL43;
+import org.lwjgl.opengl.GLDebugMessageCallback;
+import org.lwjgl.system.MemoryUtil;
 import org.tinylog.Logger;
 
 import java.util.concurrent.Callable;
@@ -26,9 +31,14 @@ public class Window {
         GLFWErrorCallback.createPrint(System.err).set();
         if (!glfwInit()) throw new IllegalStateException("Unable to initialize GLFW");
 
+
         glfwDefaultWindowHints();
+        glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
+        glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE);
+        glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, GLFW.GLFW_TRUE); // Enable debug context
 
         windowPointer = glfwCreateWindow(resX, resY, title, NULL, NULL);
+
 
         glfwSetKeyCallback(windowPointer, (window, key, scancode, action, mods) -> {
             keyCallBack(key, action);
@@ -37,10 +47,14 @@ public class Window {
             resized(w, h);
         });
 
-
+        //center window
+        GLFWVidMode vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        if(vidMode != null){
+            glfwSetWindowPos(windowPointer, (vidMode.width() - resX) / 2, (vidMode.height() - resY) / 2);
+        }
         glfwMakeContextCurrent(windowPointer);
+        glfwShowWindow(windowPointer);
     }
-
 
     public void keyCallBack(int key, int action) {
         if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {

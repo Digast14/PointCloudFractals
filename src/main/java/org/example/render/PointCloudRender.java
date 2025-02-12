@@ -36,9 +36,6 @@ public class PointCloudRender {
     private int depthTexture;
     private int fbo;
 
-    private int cubemapTexture;
-
-
     private UniformsMap uniformsMap;
     private PostProcessRender postProcessRender;
 
@@ -64,9 +61,10 @@ public class PointCloudRender {
     public void initShaders(GuiLayer guiLayer) {
         computeShaderProgram = new ShaderProgramm("shaders/PointCloud/ComputeShader.comp", GL_COMPUTE_SHADER);
         shaderProgram = new ShaderProgramm("shaders/PointCloud/vertexShader.vert", GL_VERTEX_SHADER, "shaders/PointCloud/fragmentShader.frag", GL_FRAGMENT_SHADER);
+        System.out.println("-------------------------");
         System.out.println("Compute Shader ID: " + computeShaderProgram.getProgramID());
         System.out.println("Vertex Shader ID: " + shaderProgram.getProgramID());
-
+        System.out.println("-------------------------");
         createIndexBuffer();
         dispatchCompute(guiLayer);
         dispatchVertex();
@@ -90,7 +88,7 @@ public class PointCloudRender {
     private void createIndexBuffer() {
         globalIndexBuffer = glGenBuffers();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalIndexBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, 32, GL_DYNAMIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, 32, GL_DYNAMIC_COPY );
 
         ByteBuffer buffer = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder());
         buffer.putInt(0).flip();
@@ -252,10 +250,6 @@ public class PointCloudRender {
     }
 
 
-
-
-
-
     private void renderToFBO() {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -265,7 +259,6 @@ public class PointCloudRender {
         glDrawArrays(GL_POINTS, 0, pointCount - 1);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
-
 
 
     private void parseUniform(GuiLayer guiLayer, Camera camera) {

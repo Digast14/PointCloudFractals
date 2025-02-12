@@ -163,6 +163,7 @@ public class GuiLayer {
             FunctionMakerGLSL codeEdit = new FunctionMakerGLSL(functionInput.get());
             function = codeEdit.code;
             System.out.println("GLSL Code injection: " + function);
+            System.out.println("-------------------------");
             newFunction = true;
             polynomialDegree = codeEdit.highestPolynomial;
 

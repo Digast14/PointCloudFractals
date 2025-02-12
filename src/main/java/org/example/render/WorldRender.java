@@ -4,9 +4,14 @@ package org.example.render;
 import org.example.Window;
 import org.example.gui.GuiLayer;
 import org.example.gui.GuiRender;
+import org.example.render.shader.OpenGLDebug;
 import org.example.scene.Camera;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL43;
+import org.lwjgl.opengl.GLDebugMessageCallback;
+import org.lwjgl.system.MemoryUtil;
 
+import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.GL_VERTEX_PROGRAM_POINT_SIZE;
 
@@ -21,6 +26,9 @@ public class WorldRender {
 
     public WorldRender(Window window) {
         GL.createCapabilities();
+        glfwSwapInterval(1);
+        OpenGLDebug.setupDebugCallback();
+
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
@@ -33,6 +41,7 @@ public class WorldRender {
         guiRender = new GuiRender(window);
         camera = new Camera(window.getWidth(), window.getHeight());
     }
+
 
 
     public void resize(int width, int height) {
@@ -90,5 +99,6 @@ public class WorldRender {
     public void cleanup() {
         pointCloudRender.cleanup();
         fractalRender.cleanup();
+        OpenGLDebug.cleanup();
     }
 }

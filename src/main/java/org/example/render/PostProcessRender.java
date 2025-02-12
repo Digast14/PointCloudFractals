@@ -75,6 +75,8 @@ public class PostProcessRender {
         int[] nrChannels = {3};
         String[] faces = {"textures/sky/right.jpg", "textures/sky/left.jpg", "textures/sky/top.jpg", "textures/sky/bottom.jpg", "textures/sky/front.jpg", "textures/sky/back.jpg"};
         //String[] faces = {"textures/jpn/posx.jpg", "textures/jpn/negx.jpg", "textures/jpn/posy.jpg", "textures/jpn/negy.jpg", "textures/jpn/posz.jpg", "textures/jpn/negz.jpg"};
+
+        System.out.println("-------------------------");
         for (int i = 0; i < faces.length; i++) {
             ByteBuffer data = stbi_load(faces[i], width, height, nrChannels, 0);
             if(data != null){
@@ -85,6 +87,8 @@ public class PostProcessRender {
                 System.out.println("CubeMap texture failed to load:" + faces[i]);
             }
         }
+        System.out.println("-------------------------");
+
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
