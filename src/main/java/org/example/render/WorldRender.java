@@ -7,9 +7,7 @@ import org.example.gui.GuiRender;
 import org.example.render.shader.OpenGLDebug;
 import org.example.scene.Camera;
 import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL43;
-import org.lwjgl.opengl.GLDebugMessageCallback;
-import org.lwjgl.system.MemoryUtil;
+
 
 import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
 import static org.lwjgl.opengl.GL11.*;

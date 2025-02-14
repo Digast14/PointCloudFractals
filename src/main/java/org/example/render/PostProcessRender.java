@@ -6,7 +6,12 @@ import org.example.render.shader.UniformsMap;
 import org.example.scene.Camera;
 import org.joml.Vector2f;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 import static org.lwjgl.opengl.GL45.*;
 import static org.lwjgl.stb.STBImage.stbi_image_free;
@@ -26,7 +31,7 @@ public class PostProcessRender {
     private int indexBuffer;
 
     public PostProcessRender(int texture, int depthTexture) {
-        postProcessingProgram = new ShaderProgramm("shaders/PostProcessing/PostProcessingVert.vert", GL_VERTEX_SHADER, "shaders/PostProcessing/PostProcessingFrag.frag", GL_FRAGMENT_SHADER);
+        postProcessingProgram = new ShaderProgramm("/shaders/PostProcessing/PostProcessingVert.vert", GL_VERTEX_SHADER, "/shaders/PostProcessing/PostProcessingFrag.frag", GL_FRAGMENT_SHADER);
         uniformsMap = createUniform();
 
         this.texture = texture;
@@ -73,17 +78,17 @@ public class PostProcessRender {
         int[] width = {2048};
         int[] height = {2048};
         int[] nrChannels = {3};
-        String[] faces = {"textures/sky/right.jpg", "textures/sky/left.jpg", "textures/sky/top.jpg", "textures/sky/bottom.jpg", "textures/sky/front.jpg", "textures/sky/back.jpg"};
-        //String[] faces = {"textures/jpn/posx.jpg", "textures/jpn/negx.jpg", "textures/jpn/posy.jpg", "textures/jpn/negy.jpg", "textures/jpn/posz.jpg", "textures/jpn/negz.jpg"};
+        String[] faces = {"sky/right.jpg", "sky/left.jpg", "sky/top.jpg", "sky/bottom.jpg", "sky/front.jpg", "sky/back.jpg"};
+        //String[] faces = {"/jpn/posx.jpg", "/jpn/negx.jpg", "/jpn/posy.jpg", "/jpn/negy.jpg", "/jpn/posz.jpg", "/jpn/negz.jpg"};
 
         System.out.println("-------------------------");
         for (int i = 0; i < faces.length; i++) {
-            ByteBuffer data = stbi_load(faces[i], width, height, nrChannels, 0);
-            if(data != null){
+            ByteBuffer data = loadTexture(faces[i], width, height, nrChannels);
+            if (data != null) {
                 glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width[0], height[0], 0, GL_RGB, GL_UNSIGNED_BYTE, data);
                 stbi_image_free(data);
                 System.out.println("texture: " + faces[i] + " loaded successfully");
-            }else{
+            } else {
                 System.out.println("CubeMap texture failed to load:" + faces[i]);
             }
         }
@@ -97,8 +102,24 @@ public class PostProcessRender {
         return cubeMapTexture;
     }
 
+    public static ByteBuffer loadTexture(String textureName, int[] width, int[] height, int[] channels) {
+        InputStream textureStream = PostProcessRender.class.getResourceAsStream("/textures/" + textureName);
+        if (textureStream == null) {
+            throw new RuntimeException("Texture not found: " + textureName);
+        }
+        File tempFile;
+        try {
+            tempFile = File.createTempFile("myTexture", ".png");
+            Files.copy(textureStream, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new RuntimeException("Couldn't create texture" + e);
+        }
+        tempFile.deleteOnExit();
+        return stbi_load(tempFile.getAbsolutePath(), width, height, channels, 0);
+    }
 
-    private UniformsMap createUniform(){
+
+    private UniformsMap createUniform() {
         UniformsMap uniformsMap = new UniformsMap(postProcessingProgram.getProgramID());
         uniformsMap.createUniform("mode");
         uniformsMap.createUniform("u_resolution");
@@ -123,7 +144,7 @@ public class PostProcessRender {
     public void render(PointCloudRender.SceneSettings sceneSettings, GuiLayer guiLayer, Camera camera) {
         postProcessingProgram.bind();
         int id = postProcessingProgram.getProgramID();
-        parseUniform(sceneSettings,guiLayer,camera);
+        parseUniform(sceneSettings, guiLayer, camera);
 
         glUniform1i(glGetUniformLocation(id, "colorTexture"), 0);
         glActiveTexture(GL_TEXTURE0);

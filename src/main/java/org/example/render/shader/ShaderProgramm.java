@@ -1,10 +1,13 @@
 package org.example.render.shader;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 
 import static org.lwjgl.opengl.GL11.GL_FALSE;
 import static org.lwjgl.opengl.GL20.*;
@@ -100,7 +103,7 @@ public class ShaderProgramm {
         return shaderProgram;
     }
 
-    public static String readFile(String filePath) {
+    public static String readFile2(String filePath) {
         String str;
         try {
             str = new String(Files.readAllBytes(Paths.get(filePath)));
@@ -109,6 +112,17 @@ public class ShaderProgramm {
         }
         return str;
     }
+
+    public static String readFile(String filePath) {
+        InputStream inputStream = ShaderProgramm.class.getResourceAsStream(filePath);
+        if (inputStream == null) {
+            throw new RuntimeException("Shader file not found: " + filePath);
+        }
+        try (Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8)) {
+            return scanner.useDelimiter("\\A").next(); // Read the whole file
+        }
+    }
+
 
     public int getProgramID() {
         return programID;

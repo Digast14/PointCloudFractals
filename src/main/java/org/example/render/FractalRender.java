@@ -25,7 +25,7 @@ public class FractalRender {
 
 
     public FractalRender() {
-        shaderProgram = new ShaderProgramm("shaders/2dFractal/fractal.vert", GL_VERTEX_SHADER, "shaders/2dFractal/fractal.frag", GL_FRAGMENT_SHADER);
+        shaderProgram = new ShaderProgramm("/shaders/2dFractal/fractal.vert", GL_VERTEX_SHADER, "/shaders/2dFractal/fractal.frag", GL_FRAGMENT_SHADER);
         System.out.println("Fractal fragment shader id: " + shaderProgram.getProgramID());
         createBuffers();
         createUniforms();

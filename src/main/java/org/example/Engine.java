@@ -60,7 +60,6 @@ public class Engine {
     }
 
 
-
     public void init(){
         render.getPointCloudRender().initShaders(guiLayer);
     }

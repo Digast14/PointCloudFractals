@@ -59,8 +59,8 @@ public class PointCloudRender {
 
 
     public void initShaders(GuiLayer guiLayer) {
-        computeShaderProgram = new ShaderProgramm("shaders/PointCloud/ComputeShader.comp", GL_COMPUTE_SHADER);
-        shaderProgram = new ShaderProgramm("shaders/PointCloud/vertexShader.vert", GL_VERTEX_SHADER, "shaders/PointCloud/fragmentShader.frag", GL_FRAGMENT_SHADER);
+        computeShaderProgram = new ShaderProgramm("/shaders/PointCloud/ComputeShader.comp", GL_COMPUTE_SHADER);
+        shaderProgram = new ShaderProgramm("/shaders/PointCloud/vertexShader.vert", GL_VERTEX_SHADER, "/shaders/PointCloud/fragmentShader.frag", GL_FRAGMENT_SHADER);
         System.out.println("-------------------------");
         System.out.println("Compute Shader ID: " + computeShaderProgram.getProgramID());
         System.out.println("Vertex Shader ID: " + shaderProgram.getProgramID());

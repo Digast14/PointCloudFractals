@@ -9,7 +9,6 @@ import static org.lwjgl.glfw.GLFW.*;
 
 public class Main implements IAppLogic {
 
-
     public static void main(String[] args) {
         Main main = new Main();
         Engine gameEngine = new Engine("Point Cloud Shader", 1920, 1080, main);
