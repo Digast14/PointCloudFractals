@@ -87,21 +87,21 @@ vec4 qdiv(in vec4 a, in vec4 b) {
 
 //expanded functions
 vec4 qsin(vec4 q) {
-    if(q==vec4(0)) return vec4(0);
+    if (q == vec4(0)) return vec4(0);
     float a = q.x;
     vec3 v = vec3(q.yzw);
     float vabs = length(v);
     return vec4(sin(a) * cosh(vabs), cos(a) * sinh((vabs)) * v / vabs);
 }
 vec4 qcos(vec4 q) {
-    if(q==vec4(0)) return vec4(0);
+    if (q == vec4(0)) return vec4(0);
     float a = q.x;
     vec3 v = vec3(q.yzw);
     float vabs = length(v);
     return vec4(cos(a) * cosh(vabs), -sin(a) * sinh((vabs)) * v / vabs);
 }
 vec4 qexp(vec4 q) {
-    if(q==vec4(0)) return vec4(0);
+    if (q == vec4(0)) return vec4(0);
     if (dot(q, q) == 0) return vec4(0);
     float expA = exp(q.x);
     vec3 v = vec3(q.yzw);
@@ -110,7 +110,7 @@ vec4 qexp(vec4 q) {
 }
 
 vec4 qln(vec4 q) {
-    if(q==vec4(0)) return vec4(0);
+    if (q == vec4(0)) return vec4(0);
     if (dot(q, q) == 0) return vec4(0);
     float qabs = length(q);
     float ln = log(qabs);
@@ -171,8 +171,6 @@ vec3 NewtonFractalQuaternion(in vec4 c) {
     return vec3(0.0);
 }
 
-
-
 vec3 NewtonMethod2(in vec4 c) {
     vec4 z;
     float breakOut = 64.0;
@@ -194,12 +192,11 @@ vec3 NewtonMethod(in vec4 c) {
     vec4 z;
     vec4 zNudge;
 
-
     if (u_qZeroC == 0) {
         z = c;
         zNudge = c + c * u_nudgeValue;
     } else {
-        z =u_qZero;
+        z = u_qZero;
         zNudge = z;
     }
     for (int iteration = 0; iteration < u_maxIteration; iteration++) {
@@ -215,6 +212,7 @@ vec3 NewtonMethod(in vec4 c) {
 }
 
 
+//Raymarching
 vec3 rayMarch(vec3 origin, vec3 dir) {
     float t = 0.0;
     for (int i = 0; i < u_maxIterationRange; i++) {
@@ -233,6 +231,40 @@ vec3 rayMarch(vec3 origin, vec3 dir) {
     return u_color3;
 }
 
+//Graph Drawing
+float Graph(in float x) {
+    vec4 z;
+    if (u_qZeroC == 0) z = vec4(x, 0, 0, 0);
+    else z = vec4(u_qZero.x, 0, 0, 0);
+    for (int iteration = 0; iteration < u_maxIteration; iteration++) {
+        z = javaFunction(z, vec4(x, 0, 0, 0));
+    }
+    return -z.x;
+}
+
+float plot2D(vec2 st, float lineWidth) {
+    float minDist = 1e12;
+
+    for (float offset = -3;  offset <= 3; offset += 1.0) {
+        float xCoord = st.x + offset * lineWidth;
+        float yCoord = Graph(xCoord);
+        float dist = length(st - vec2(xCoord, yCoord)); // True Euclidean distance
+        minDist = min(minDist, dist);
+    }
+    return minDist;
+}
+
+vec3 grid2D(in vec2 _st, in float _width) {
+    float axisDetail = _width;
+    if (abs(_st.x) < axisDetail || abs(_st.y) < axisDetail)
+    return  u_color;
+    if (abs(mod(_st.x, 1.0)) < axisDetail || abs(mod(_st.y, 1.0)) < axisDetail)
+    return  u_color2;
+    if (abs(mod(_st.x, 0.25)) < axisDetail || abs(mod(_st.y, 0.25)) < axisDetail)
+    return 1.0 - vec3(0.95, 0.95, 1.0);
+    return vec3(0.0);
+}
+
 //camera function
 vec3 rotateByVec3(in vec3 vector, in vec3 axis, in float angle) {
     axis = normalize(axis);
@@ -247,14 +279,19 @@ void main() {
     float aspectRatio = u_resolution.x / u_resolution.y;
     vec2 uv = vec2(((gl_FragCoord.x / u_resolution.y) - (aspectRatio) * 0.5), -((gl_FragCoord.y / u_resolution.y) - 0.5));
     vec3 ro = vec3(-u_origin.z, u_origin.x, u_origin.y);
-
+    vec4 pixelCoord = vec4(uv / u_info + ro.xy, 0, 0);
     vec3 color;
 
     if (u_gameMode == 0) {
-        vec4 pixelCoord = vec4(uv / u_info + ro.xy, 0, 0);
         if (u_mode == 0)color = NewtonMethod(pixelCoord);
         if (u_mode == 1)color = NewtonMethod2(pixelCoord);
         if (u_mode == 2)color = NewtonFractalQuaternion(pixelCoord);
+    } else if (u_gameMode == 1) {
+        float dist = plot2D(pixelCoord.xy, 0.0001);
+        float intensity = smoothstep(0., 1., 1. - dist * 50);
+        intensity = pow(intensity,1./2.2);
+        color = vec3(intensity);
+        color += grid2D(pixelCoord.xy, 0.005);
     } else {
         vec3 rd = u_direction;
         vec3 camLeftNormal = cross(u_direction, vec3(0.0, 0.0, 1.0));
@@ -265,6 +302,6 @@ void main() {
         rd = rotateByVec3(rd, camLeftNormal, uv.y);
         color = rayMarch(ro, rd);
     }
-
-    fragColor = vec4(vec3(color), 1.0);
+    fragColor = vec4(color, 1);
 }
+

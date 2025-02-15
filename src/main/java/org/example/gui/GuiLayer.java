@@ -204,9 +204,7 @@ public class GuiLayer {
                 autoT = !autoT;
             }
 
-            if (ImGui.checkbox("Raymarching", gameMode)) {
-                gameMode = !gameMode;
-            }
+
 
             if (autoT) {
                 if (ImGui.sliderFloat("change speed", startFloatSpeed, 0.0f, 10.0f)) {
@@ -216,6 +214,10 @@ public class GuiLayer {
                     startFloat[0] = (float) Math.sin(counter);
                     time = startFloat[0];
                 }
+            }
+
+            if (ImGui.checkbox("Graph", gameMode)) {
+                gameMode = !gameMode;
             }
 
             if (ImGui.colorEdit3("color", col)) {
