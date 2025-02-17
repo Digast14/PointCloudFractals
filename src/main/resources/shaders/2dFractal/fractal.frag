@@ -245,7 +245,7 @@ float Graph(in float x) {
 float plot2D(vec2 st, float lineWidth) {
     float minDist = 1e12;
 
-    for (float offset = -3;  offset <= 3; offset += 1.0) {
+    for (float offset = -1;  offset <= 1; offset += 3/u_stepSize) {
         float xCoord = st.x + offset * lineWidth;
         float yCoord = Graph(xCoord);
         float dist = length(st - vec2(xCoord, yCoord)); // True Euclidean distance
@@ -287,7 +287,7 @@ void main() {
         if (u_mode == 1)color = NewtonMethod2(pixelCoord);
         if (u_mode == 2)color = NewtonFractalQuaternion(pixelCoord);
     } else if (u_gameMode == 1) {
-        float dist = plot2D(pixelCoord.xy, 0.0001);
+        float dist = plot2D(pixelCoord.xy, u_stepSizeMult);
         float intensity = smoothstep(0., 1., 1. - dist * 50);
         intensity = pow(intensity,1./2.2);
         color = vec3(intensity);

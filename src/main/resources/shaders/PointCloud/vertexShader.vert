@@ -19,12 +19,16 @@ out vec3 normalColor;
 
 void main() {
     vec4 pos = vec4(points[gl_VertexID], 1.0);
-    vec3 cameraPos = inverse(view)[3].xyz;
-    vec3 relativePos = pos.xyz - cameraPos;
-    float distanceToCamera = length(relativePos);
+    if(minPointSize==0){
+        gl_PointSize = 1;
+    }else{
+        vec3 cameraPos = inverse(view)[3].xyz;
+        vec3 relativePos = pos.xyz - cameraPos;
+        float distanceToCamera = length(relativePos);
+        gl_PointSize = (range*minPointSize)/distanceToCamera;
+    }
 
-    normalColor = vec4(normals[gl_VertexID], 1).rgb;
-
+    normalColor = normals[gl_VertexID];
     gl_Position = projection * view * pos;
-    gl_PointSize = (range*minPointSize)/distanceToCamera;
+
 }

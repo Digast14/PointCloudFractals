@@ -74,13 +74,12 @@ public class WorldRender {
 
     }
 
-
     private void updatePointCloudSettings(GuiLayer guiLayer) {
         pointCloudSettings.range = guiLayer.range;
         pointCloudSettings.workGroupDimensionX = guiLayer.cDimensions[0];
         pointCloudSettings.workGroupDimensionY = guiLayer.cDimensions[1];
         pointCloudSettings.workGroupDimensionZ = guiLayer.cDimensions[2];
-
+        pointCloudSettings.vram = guiLayer.VRam;
     }
 
 

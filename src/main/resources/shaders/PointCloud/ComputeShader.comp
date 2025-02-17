@@ -32,6 +32,7 @@ uniform int u_pass;
 int n = u_power;
 
 
+
 //math function
 vec4 qmul(in vec4 a, in vec4 b) {
     if (a.y == 0 && a.z == 0 && a.w == 0) return a.x * b;
@@ -172,21 +173,38 @@ vec3 calculateNormal(in vec3 p) {
 }
 
 
+shared uint indexLocal = 0;
+shared uint indexGlobalSaved = 0;
+
 void main() {
     ivec3 gridIndex = ivec3(gl_GlobalInvocationID.xyz);
-
-    //vec3 pos = (vec3(gridIndex) / float(gridDensity)) - vec3(range);
     vec3 pos = (vec3(gridIndex) / float(gridDensity)) - ranges * range;
 
-    if (JuliaSet(pos) > 0) {
-        return;
-    } else {
-        uint currentIndex = atomicAdd(globalIndex, 1);
-        if (u_pass == 1) {
-            if (currentIndex < vertexArrayLength) {
-                points[currentIndex + 1] = pos.xyz;
-                normals[currentIndex + 1] = calculateNormal(pos);
-            }
+    if (globalIndex >= vertexArrayLength) return;
+
+    bool isPartOfSet = JuliaSet(pos) <= 0;
+    uint currentIndex = 0;
+
+    if (u_pass == 0) {
+        if (isPartOfSet) {
+            atomicAdd(globalIndex, 1);
+        }
+    }
+    //oone atomic opeartion on the buffer per workgroup, generally points close together in the buffer were in the same workgoup so relativly close together. Also shuffled so according to this paper:
+    //Rendering Point Clouds with Compute Shaders and Vertex Order Optimization
+    //Performance should additionally be improved
+    if (u_pass == 1) {
+        if (isPartOfSet) {
+            currentIndex = atomicAdd(indexLocal, 1);
+        }
+        barrier();
+        if (gl_LocalInvocationID == ivec3(0, 0, 0)) {
+            indexGlobalSaved = atomicAdd(globalIndex, indexLocal);
+        }
+        barrier();
+        if (isPartOfSet) {
+            points[indexGlobalSaved + currentIndex] = pos.xyz;
+            normals[indexGlobalSaved + currentIndex] = calculateNormal(pos);
         }
     }
 }

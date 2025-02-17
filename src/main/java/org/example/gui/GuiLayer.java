@@ -130,8 +130,12 @@ public class GuiLayer {
     }
 
     //blur
-    private ImInt blurStart = new ImInt(0);
+    private final ImInt blurStart = new ImInt(0);
     public int blur = 0;
+
+    //blur
+    private final ImInt VRamStart = new ImInt(4);
+    public int VRam = 4;
 
     //point Count
     private int pointCount = 0;
@@ -152,21 +156,20 @@ public class GuiLayer {
         ImGui.text("fps: " + fps);
 
 
-
         if (local3dFractal) {
             ImGui.text(String.format(Locale.US, "Points: %,d", pointCount));
         }
         ImGui.pushItemWidth(250);
         ImGui.inputText("Input", functionInput);
         if (ImGui.button("compile Function")) {
-            System.out.println("Text entered: " + functionInput.get());
-            FunctionMakerGLSL codeEdit = new FunctionMakerGLSL(functionInput.get());
+            String func = functionInput.get();
+            System.out.println("Text entered: " + func);
+            FunctionMakerGLSL codeEdit = new FunctionMakerGLSL(func);
             function = codeEdit.code;
             System.out.println("GLSL Code injection: " + function);
             System.out.println("-------------------------");
             newFunction = true;
             polynomialDegree = codeEdit.highestPolynomial;
-
         }
         ImGui.pushItemWidth(0);
         if (ImGui.checkbox("custom q Zero", booleanQZeroC)) {
@@ -216,7 +219,7 @@ public class GuiLayer {
                 }
             }
 
-            if (ImGui.checkbox("Graph", gameMode)) {
+            if (ImGui.checkbox("Graph (WIP)", gameMode)) {
                 gameMode = !gameMode;
             }
 
@@ -255,17 +258,19 @@ public class GuiLayer {
                     if (ImGui.inputFloat("Normal Step Size", normalStepSizeStart)) {
                         normalStepSize = normalStepSizeStart.floatValue();
                     }
-                    if (ImGui.sliderInt("Quadsize", quadSizeStart, 1, 15)) {
+                    if (ImGui.sliderInt("Quadsize", quadSizeStart, 0, 15)) {
                         quadSize = quadSizeStart[0];
                     }
                     if(!customDimensions){
-                        if (ImGui.inputInt("Resolution\nRecommend: (16-32)", workGroupDimensionStart)) {
+                        if (ImGui.inputInt("Resolution", workGroupDimensionStart)) {
                             cDimensions[0] = workGroupDimensionStart.intValue();
                             cDimensions[1] = workGroupDimensionStart.intValue();
                             cDimensions[2] = workGroupDimensionStart.intValue();
                         }
                     }
-
+                    if (ImGui.inputInt("Gb VRAM, ", VRamStart)) {
+                        VRam = VRamStart.get();
+                    }
                     if (ImGui.checkbox("Custom XYZ Resolution", customDimensions)) {
                         customDimensions = !customDimensions;
                     }
@@ -279,18 +284,17 @@ public class GuiLayer {
                     if(ImGui.inputInt("Post process mode", blurStart)){
                         blur = blurStart.get();
                     }
-
                 }
             } else {
                 if (ImGui.inputInt("Max Range Iteration", maxIterationStartRange)) {
                     maxIterationRange = maxIterationStartRange.intValue();
                 }
 
-                if (ImGui.inputFloat("Step Size", stepSizeStart)) {
+                if (ImGui.inputFloat("Graph step Count", stepSizeStart)) {
                     stepSize = stepSizeStart.floatValue();
                 }
 
-                if (ImGui.inputFloat("Step Size Mult", stepSizeMultStart)) {
+                if (ImGui.inputFloat("Graph Step Range", stepSizeMultStart)) {
                     stepSizeMult = stepSizeMultStart.floatValue();
                 }
                 if (ImGui.checkbox("add z cutoff", zCutoffState)) {

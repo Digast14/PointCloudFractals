@@ -28,7 +28,8 @@ public class PointCloudRender {
     private float range;
     private int[] dimensions = new int[3];
     private int totalThreadDimension;
-    private int totalThreads;
+    private long totalThreads;
+    private long availableMemory;
 
     private int width;
     private int height;
@@ -45,7 +46,12 @@ public class PointCloudRender {
         dimensions[2] = sceneSettings.workGroupDimensionZ;
 
         totalThreadDimension = dimensions[0] * sceneSettings.threadDimension;
-        totalThreads = dimensions[0] * sceneSettings.threadDimension * dimensions[1] * sceneSettings.threadDimension * dimensions[2] * sceneSettings.threadDimension;
+        totalThreads = (long) dimensions[0] * sceneSettings.threadDimension * dimensions[1] * sceneSettings.threadDimension * dimensions[2] * sceneSettings.threadDimension;
+        availableMemory = (sceneSettings.vram * 1073741824L)/(4*3*2);
+        System.out.print("max Points: ");
+        System.out.printf(Locale.US, "%,d", availableMemory);
+        System.out.println();
+
 
         range = sceneSettings.range;
         width = sceneSettings.width;
@@ -99,12 +105,12 @@ public class PointCloudRender {
     private void createPointBuffers() {
         ssbo = glGenBuffers();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, (long) pointCount * 32 * 3, GL_DYNAMIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (long) pointCount * 4 * 4, GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
 
         normalBuffer = glGenBuffers();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, normalBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, (long) pointCount * 32 * 3, GL_DYNAMIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (long) pointCount * 4 * 4, GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, normalBuffer);
     }
 
@@ -148,7 +154,7 @@ public class PointCloudRender {
 
     private void parseComputeUniform(int id,GuiLayer guiLayer){
         int gridDensity = (int) (totalThreadDimension / (range * 2));
-        glUniform1i(glGetUniformLocation(id, "vertexArrayLength"), totalThreads);
+        glUniform1i(glGetUniformLocation(id, "vertexArrayLength"), (int) availableMemory);
         glUniform1i(glGetUniformLocation(id, "gridDensity"), gridDensity);
         glUniform1f(glGetUniformLocation(id, "range"), range);
         glUniform3f(glGetUniformLocation(id, "ranges"), 1, 1 * ((float) dimensions[1] / dimensions[0]), 1 * ((float) dimensions[2] / dimensions[0]));
@@ -285,5 +291,6 @@ public class PointCloudRender {
         public int workGroupDimensionX = 16;
         public int workGroupDimensionY = 16;
         public int workGroupDimensionZ = 16;
+        public int vram = 4;
     }
 }

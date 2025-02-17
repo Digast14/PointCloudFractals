@@ -11,7 +11,7 @@ public class FunctionMakerGLSL {
     }
 
     private final Stack<String> sortedTokenStack = new Stack<>();
-    private final Stack<String> tokenStack = new Stack<>();
+    private Stack<String> tokenStack = new Stack<>();
     private final String function;
     public String code;
     public int highestPolynomial = 2;
@@ -122,6 +122,7 @@ public class FunctionMakerGLSL {
         String functionCopy = function + "$";
         boolean isPower = false;
         String longToken = "";
+        int parenthesis = 0;
 
         while (!functionCopy.isEmpty()) {
 
@@ -184,9 +185,13 @@ public class FunctionMakerGLSL {
                     case '-' -> tokenStack.push("_minus");
                     case '*' -> tokenStack.push("_qmul");
                     case '/' -> tokenStack.push("_qdiv");
-                    case '(' -> tokenStack.push("_((");
-                    case ')' -> tokenStack.push("_)");
-                    case '^' -> {
+                    case '(' -> {
+                        tokenStack.push("_((");
+                        parenthesis++;
+                    }case ')' -> {
+                        tokenStack.push("_)");
+                        parenthesis--;
+                    }case '^' -> {
                         tokenStack.push("_qpow");
                         isPower = true;
                     }
@@ -194,6 +199,7 @@ public class FunctionMakerGLSL {
                 functionCopy = functionCopy.substring(1);
             }
         }
+        if(parenthesis != 0) tokenStack = new Stack<>();
     }
 
 
