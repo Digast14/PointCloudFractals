@@ -5,11 +5,6 @@
   <artifactId>PointCloudTest</artifactId>
   <version>1.0-SNAPSHOT</version>
   <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-      </resource>
-    </resources>
     <plugins>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>

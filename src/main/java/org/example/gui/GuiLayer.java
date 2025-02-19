@@ -129,13 +129,22 @@ public class GuiLayer {
         this.fps = fps;
     }
 
+    //drawMode
+    public boolean drawMode;
+
+    //jitter
+    private ImFloat jitterStrengthStart = new ImFloat(0.0f);
+    public float jitterStrength = 0.0f;
+
+
+
     //blur
     private final ImInt blurStart = new ImInt(0);
     public int blur = 0;
 
-    //blur
-    private final ImInt VRamStart = new ImInt(4);
-    public int VRam = 4;
+    //VRAM
+    private final ImInt VRamStart = new ImInt(1);
+    public int VRam = 1;
 
     //point Count
     private int pointCount = 0;
@@ -251,6 +260,9 @@ public class GuiLayer {
                         range = FractalRange.floatValue();
                     }
 
+                    if(ImGui.checkbox("drawMethod", drawMode)){
+                        drawMode = !drawMode;
+                    }
 
                     if (ImGui.inputInt("normal Precision", normalPrecisionStart)) {
                         normalPrecision = normalPrecisionStart.intValue();
@@ -260,6 +272,9 @@ public class GuiLayer {
                     }
                     if (ImGui.sliderInt("Quadsize", quadSizeStart, 0, 15)) {
                         quadSize = quadSizeStart[0];
+                    }
+                    if (ImGui.inputFloat("jitter strength", jitterStrengthStart)) {
+                        jitterStrength = jitterStrengthStart.floatValue();
                     }
                     if(!customDimensions){
                         if (ImGui.inputInt("Resolution", workGroupDimensionStart)) {

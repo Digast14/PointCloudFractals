@@ -4,6 +4,7 @@ import org.example.gui.GuiLayer;
 import org.example.scene.Camera;
 import org.example.render.shader.ShaderProgramm;
 import org.example.render.shader.UniformsMap;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -16,8 +17,9 @@ import static org.lwjgl.opengl.GL43.*;
 
 public class PointCloudRender {
 
-    private ShaderProgramm shaderProgram;
     private ShaderProgramm computeShaderProgram;
+    private ShaderProgramm shaderProgram;
+
     private SceneSettings sceneSettings;
 
     private int ssbo;
@@ -31,6 +33,8 @@ public class PointCloudRender {
     private long totalThreads;
     private long availableMemory;
 
+    private int gridDensity;
+
     private int width;
     private int height;
     private int texture;
@@ -39,45 +43,52 @@ public class PointCloudRender {
 
     private UniformsMap uniformsMap;
     private PostProcessRender postProcessRender;
-
-    private void setSettings(){
-        dimensions[0] = sceneSettings.workGroupDimensionX;
-        dimensions[1] = sceneSettings.workGroupDimensionY;
-        dimensions[2] = sceneSettings.workGroupDimensionZ;
-
-        totalThreadDimension = dimensions[0] * sceneSettings.threadDimension;
-        totalThreads = (long) dimensions[0] * sceneSettings.threadDimension * dimensions[1] * sceneSettings.threadDimension * dimensions[2] * sceneSettings.threadDimension;
-        availableMemory = (sceneSettings.vram * 1073741824L)/(4*3*2);
-        System.out.print("max Points: ");
-        System.out.printf(Locale.US, "%,d", availableMemory);
-        System.out.println();
-
-
-        range = sceneSettings.range;
-        width = sceneSettings.width;
-        height = sceneSettings.height;
-    }
+    private CustomPointCloudRender customPointCloudRender;
 
     public PointCloudRender(SceneSettings sceneSettings) {
         this.sceneSettings = sceneSettings;
         setSettings();
     }
 
+    private void setSettings() {
+        dimensions[0] = sceneSettings.workGroupDimensionX;
+        dimensions[1] = sceneSettings.workGroupDimensionY;
+        dimensions[2] = sceneSettings.workGroupDimensionZ;
+
+        range = sceneSettings.range;
+        width = sceneSettings.width;
+        height = sceneSettings.height;
+
+        totalThreadDimension = dimensions[0] * sceneSettings.threadDimension;
+        totalThreads = (long) dimensions[0] * sceneSettings.threadDimension * dimensions[1] * sceneSettings.threadDimension * dimensions[2] * sceneSettings.threadDimension;
+        availableMemory = (sceneSettings.vram * 1073741824L) / (4 * 3 * 2);
+        gridDensity = (int) (totalThreadDimension / (range * 2));
+
+        System.out.print("max Points: ");
+        System.out.printf(Locale.US, "%,d", availableMemory);
+        System.out.println();
+    }
+
+
+
 
     public void initShaders(GuiLayer guiLayer) {
         computeShaderProgram = new ShaderProgramm("/shaders/PointCloud/ComputeShader.comp", GL_COMPUTE_SHADER);
         shaderProgram = new ShaderProgramm("/shaders/PointCloud/vertexShader.vert", GL_VERTEX_SHADER, "/shaders/PointCloud/fragmentShader.frag", GL_FRAGMENT_SHADER);
+
         System.out.println("-------------------------");
         System.out.println("Compute Shader ID: " + computeShaderProgram.getProgramID());
         System.out.println("Vertex Shader ID: " + shaderProgram.getProgramID());
         System.out.println("-------------------------");
+
         createIndexBuffer();
         dispatchCompute(guiLayer);
         dispatchVertex();
 
-        postProcessRender = new PostProcessRender(texture, depthTexture);
-
         guiLayer.setPointCount(pointCount);
+
+        postProcessRender = new PostProcessRender(texture, depthTexture);
+        customPointCloudRender = new CustomPointCloudRender(pointCount, texture, fbo, sceneSettings);
     }
 
     public void recompile(GuiLayer guiLayer) {
@@ -89,12 +100,14 @@ public class PointCloudRender {
         createIndexBuffer();
         dispatchCompute(guiLayer);
         guiLayer.setPointCount(pointCount);
+
+        customPointCloudRender.updatePointCount(pointCount);
     }
 
     private void createIndexBuffer() {
         globalIndexBuffer = glGenBuffers();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalIndexBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, 32, GL_DYNAMIC_COPY );
+        glBufferData(GL_SHADER_STORAGE_BUFFER, 32, GL_DYNAMIC_COPY);
 
         ByteBuffer buffer = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder());
         buffer.putInt(0).flip();
@@ -121,6 +134,7 @@ public class PointCloudRender {
         glBufferData(GL_SHADER_STORAGE_BUFFER, 32, GL_DYNAMIC_DRAW);
         ByteBuffer buffer = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder());
         buffer.putInt(0).flip();
+
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, buffer);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, globalIndexBuffer);
     }
@@ -152,12 +166,11 @@ public class PointCloudRender {
         computeShaderProgram.cleanup();
     }
 
-    private void parseComputeUniform(int id,GuiLayer guiLayer){
-        int gridDensity = (int) (totalThreadDimension / (range * 2));
+    private void parseComputeUniform(int id, GuiLayer guiLayer) {
         glUniform1i(glGetUniformLocation(id, "vertexArrayLength"), (int) availableMemory);
         glUniform1i(glGetUniformLocation(id, "gridDensity"), gridDensity);
         glUniform1f(glGetUniformLocation(id, "range"), range);
-        glUniform3f(glGetUniformLocation(id, "ranges"), 1, 1 * ((float) dimensions[1] / dimensions[0]), 1 * ((float) dimensions[2] / dimensions[0]));
+        glUniform3i(glGetUniformLocation(id, "ranges"), dimensions[0], dimensions[1], dimensions[2]);
         glUniform1f(glGetUniformLocation(id, "timeSin"), guiLayer.time);
         glUniform1i(glGetUniformLocation(id, "u_qZeroC"), guiLayer.qZeroC);
         glUniform4f(glGetUniformLocation(id, "u_qZero"), guiLayer.qZero.x, guiLayer.qZero.y, guiLayer.qZero.z, guiLayer.qZero.w);
@@ -179,6 +192,8 @@ public class PointCloudRender {
         uniformsMap.createUniform("view");
         uniformsMap.createUniform("minPointSize");
         uniformsMap.createUniform("range");
+        uniformsMap.createUniform("gridDensity");
+        uniformsMap.createUniform("jitterStrength");
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
 
@@ -186,6 +201,16 @@ public class PointCloudRender {
 
         shaderProgram.unbind();
     }
+
+    private void parseUniform(GuiLayer guiLayer, Camera camera) {
+        uniformsMap.setUniform("projection", camera.getProjectionMatrix());
+        uniformsMap.setUniform("view", camera.getViewMatrix());
+        uniformsMap.setUniform("minPointSize", (float) guiLayer.quadSize);
+        uniformsMap.setUniform("range", range);
+        uniformsMap.setUniform("gridDensity", gridDensity);
+        uniformsMap.setUniform("jitterStrength", guiLayer.jitterStrength);
+    }
+
 
     private void createBuffers() {
         texture = createTexture();
@@ -229,6 +254,8 @@ public class PointCloudRender {
         glBindTexture(GL_TEXTURE_2D, 0);
         this.width = width;
         this.height = height;
+
+        customPointCloudRender.resize(width,height);
     }
 
     private int createFrameBuffer() {
@@ -249,7 +276,9 @@ public class PointCloudRender {
         shaderProgram.bind();
         parseUniform(guiLayer, camera);
 
-        renderToFBO();
+        if (guiLayer.drawMode) renderToFBO();
+        else customPointCloudRender.render(guiLayer, camera);
+
 
         shaderProgram.unbind();
         postProcessRender.render(sceneSettings, guiLayer, camera);
@@ -262,17 +291,12 @@ public class PointCloudRender {
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glDrawArrays(GL_POINTS, 0, pointCount - 1);
+        glDrawArrays(GL_POINTS, 0, pointCount);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
 
-    private void parseUniform(GuiLayer guiLayer, Camera camera) {
-        uniformsMap.setUniform("projection", camera.getProjectionMatrix());
-        uniformsMap.setUniform("view", camera.getViewMatrix());
-        uniformsMap.setUniform("minPointSize", (float) guiLayer.quadSize);
-        uniformsMap.setUniform("range", range);
-    }
+
 
     public void cleanup() {
         glDeleteBuffers(ssbo);
@@ -281,6 +305,7 @@ public class PointCloudRender {
         glDeleteFramebuffers(fbo);
         shaderProgram.cleanup();
         postProcessRender.cleanUp();
+        customPointCloudRender.cleanUp();
     }
 
     public static class SceneSettings {
@@ -291,6 +316,6 @@ public class PointCloudRender {
         public int workGroupDimensionX = 16;
         public int workGroupDimensionY = 16;
         public int workGroupDimensionZ = 16;
-        public int vram = 4;
+        public int vram = 1;
     }
 }

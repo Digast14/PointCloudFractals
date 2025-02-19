@@ -15,7 +15,7 @@ layout (std430, binding = 2) buffer GlobalIndex {
 uniform int vertexArrayLength;
 uniform int gridDensity;
 uniform float range;
-uniform vec3 ranges;
+uniform ivec3 ranges;
 
 uniform float timeSin;
 uniform int u_qZeroC;
@@ -173,14 +173,21 @@ vec3 calculateNormal(in vec3 p) {
 }
 
 
-shared uint indexLocal = 0;
-shared uint indexGlobalSaved = 0;
+float random (vec2 st) {
+    return fract(sin(dot(st, vec2(12.9898,78.233))) * 43758.5453123)*2-1;
+}
+
+shared uint indexLocal;
+shared uint indexGlobalSaved;
 
 void main() {
-    ivec3 gridIndex = ivec3(gl_GlobalInvocationID.xyz);
-    vec3 pos = (vec3(gridIndex) / float(gridDensity)) - ranges * range;
-
     if (globalIndex >= vertexArrayLength) return;
+
+    ivec3 gridIndex = ivec3(gl_GlobalInvocationID.xyz) - ranges * 5;
+    vec3 pos = vec3(dvec3(gridIndex)  / double(gridDensity));
+
+    //ditter also affects normal if you want
+    pos += vec3(random(pos.xy), random(pos.xz + 0.31), random(pos.yz + 0.17)) / gridDensity * 0.3;
 
     bool isPartOfSet = JuliaSet(pos) <= 0;
     uint currentIndex = 0;
@@ -194,6 +201,13 @@ void main() {
     //Rendering Point Clouds with Compute Shaders and Vertex Order Optimization
     //Performance should additionally be improved
     if (u_pass == 1) {
+        if (gl_LocalInvocationID == ivec3(0, 0, 0)) {
+            indexLocal = 0;
+            indexGlobalSaved = 0;
+
+        }
+        barrier();
+
         if (isPartOfSet) {
             currentIndex = atomicAdd(indexLocal, 1);
         }
