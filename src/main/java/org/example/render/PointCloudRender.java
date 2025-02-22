@@ -40,6 +40,8 @@ public class PointCloudRender {
     private int depthTexture;
     private int fbo;
 
+    private final long GB = 1073741824L;
+
     private UniformsMap uniformsMap;
     private PostProcessRender postProcessRender;
     private CustomPointCloudRender customPointCloudRender;
@@ -60,7 +62,7 @@ public class PointCloudRender {
 
         int totalThreadDimension = dimensions[0] * sceneSettings.threadDimension;
         totalThreads = (long) dimensions[0] * sceneSettings.threadDimension * dimensions[1] * sceneSettings.threadDimension * dimensions[2] * sceneSettings.threadDimension;
-        maxPoints = (sceneSettings.vram * 1073741824L) / (4 * 3 * 2);
+        maxPoints = (sceneSettings.vram * GB) / (4 * 3 * 2);
         gridDensity = (int) (totalThreadDimension / (range * 2));
 
         System.out.print("max Points: ");
@@ -113,16 +115,19 @@ public class PointCloudRender {
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, globalIndexBuffer);
     }
 
+    //up to 8GB storage usage before second Buffer is created. max Size 16 GB
     private void createPointBuffers() {
+        long maxStorage = GB*4-1;
+
         ssbo = glGenBuffers();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, min((long) pointCount * 12, 4294967295L), GL_DYNAMIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, min((long) pointCount * 12, maxStorage), GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
 
-        if((long)pointCount * 12 > 4294967295L){
+        if((long)pointCount * 12 > maxStorage){
             int ssbo2 = glGenBuffers();
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo2);
-            glBufferData(GL_SHADER_STORAGE_BUFFER, min((long) pointCount * 4 * 3 - 4294967295L, 4294967295L), GL_DYNAMIC_DRAW);
+            glBufferData(GL_SHADER_STORAGE_BUFFER, min((long) pointCount * 12 - maxStorage, maxStorage), GL_DYNAMIC_DRAW);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, ssbo2);
         }
 
@@ -130,13 +135,13 @@ public class PointCloudRender {
 
         normalBuffer = glGenBuffers();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, normalBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, min((long) pointCount * 12 , 4294967295L), GL_DYNAMIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, min((long) pointCount * 12 , maxStorage), GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, normalBuffer);
 
-        if((long)pointCount * 12 > 4294967295L){
+        if((long)pointCount * 12 > maxStorage){
             int normalBuffer2 = glGenBuffers();
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, normalBuffer2);
-            glBufferData(GL_SHADER_STORAGE_BUFFER, min((long) pointCount * 4 * 3 - 4294967295L, 4294967295L), GL_DYNAMIC_DRAW);
+            glBufferData(GL_SHADER_STORAGE_BUFFER, min((long) pointCount * 12 - maxStorage, maxStorage), GL_DYNAMIC_DRAW);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, normalBuffer2);
         }
     }

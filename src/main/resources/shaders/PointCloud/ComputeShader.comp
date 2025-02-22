@@ -205,7 +205,7 @@ void main() {
     vec3 pos = vec3(dvec3(gridIndex) / double(gridDensity));
 
     //ditter also affects normal if you want
-    //pos += vec3(random(pos.xy), random(pos.xz + 0.31), random(pos.yz + 0.17)) / gridDensity * 0.3;
+    pos += vec3(random(pos.xy), random(pos.xz + 0.31), random(pos.yz + 0.17)) / gridDensity * 0.3;
 
     bool isPartOfSet = JuliaSet(pos) <= 0;
     uint currentIndex = 0;
@@ -237,15 +237,6 @@ void main() {
             uint actualIndex = (indexGlobalSaved + currentIndex);
 
             vec3 color = calculateNormal(pos);
-            points[actualIndex].x = pos.x;
-            points[actualIndex].y = pos.y;
-            points[actualIndex].z = pos.z;
-
-            normals[actualIndex].x = color.x;
-            normals[actualIndex].y = color.y;
-            normals[actualIndex].z = color.z;
-
-
 
             if(actualIndex<357913941){
                 points[actualIndex].x = pos.x;
