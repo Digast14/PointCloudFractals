@@ -4,13 +4,13 @@ import org.example.gui.GuiLayer;
 import org.example.scene.Camera;
 import org.example.render.shader.ShaderProgramm;
 import org.example.render.shader.UniformsMap;
-import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Locale;
 
 
+import static java.lang.Math.min;
 import static java.sql.Types.NULL;
 import static org.lwjgl.opengl.GL15.glBufferSubData;
 import static org.lwjgl.opengl.GL43.*;
@@ -29,9 +29,8 @@ public class PointCloudRender {
 
     private float range;
     private int[] dimensions = new int[3];
-    private int totalThreadDimension;
     private long totalThreads;
-    private long availableMemory;
+    private long maxPoints;
 
     private int gridDensity;
 
@@ -59,16 +58,15 @@ public class PointCloudRender {
         width = sceneSettings.width;
         height = sceneSettings.height;
 
-        totalThreadDimension = dimensions[0] * sceneSettings.threadDimension;
+        int totalThreadDimension = dimensions[0] * sceneSettings.threadDimension;
         totalThreads = (long) dimensions[0] * sceneSettings.threadDimension * dimensions[1] * sceneSettings.threadDimension * dimensions[2] * sceneSettings.threadDimension;
-        availableMemory = (sceneSettings.vram * 1073741824L) / (4 * 3 * 2);
+        maxPoints = (sceneSettings.vram * 1073741824L) / (4 * 3 * 2);
         gridDensity = (int) (totalThreadDimension / (range * 2));
 
         System.out.print("max Points: ");
-        System.out.printf(Locale.US, "%,d", availableMemory);
+        System.out.printf(Locale.US, "%,d", maxPoints);
         System.out.println();
     }
-
 
 
 
@@ -81,7 +79,7 @@ public class PointCloudRender {
         System.out.println("Vertex Shader ID: " + shaderProgram.getProgramID());
         System.out.println("-------------------------");
 
-        createIndexBuffer();
+
         dispatchCompute(guiLayer);
         dispatchVertex();
 
@@ -118,13 +116,29 @@ public class PointCloudRender {
     private void createPointBuffers() {
         ssbo = glGenBuffers();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, (long) pointCount * 4 * 4, GL_DYNAMIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, min((long) pointCount * 12, 4294967295L), GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
+
+        if((long)pointCount * 12 > 4294967295L){
+            int ssbo2 = glGenBuffers();
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo2);
+            glBufferData(GL_SHADER_STORAGE_BUFFER, min((long) pointCount * 4 * 3 - 4294967295L, 4294967295L), GL_DYNAMIC_DRAW);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, ssbo2);
+        }
+
+
 
         normalBuffer = glGenBuffers();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, normalBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, (long) pointCount * 4 * 4, GL_DYNAMIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, min((long) pointCount * 12 , 4294967295L), GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, normalBuffer);
+
+        if((long)pointCount * 12 > 4294967295L){
+            int normalBuffer2 = glGenBuffers();
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, normalBuffer2);
+            glBufferData(GL_SHADER_STORAGE_BUFFER, min((long) pointCount * 4 * 3 - 4294967295L, 4294967295L), GL_DYNAMIC_DRAW);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, normalBuffer2);
+        }
     }
 
     private void setPointCountReset() {
@@ -142,6 +156,8 @@ public class PointCloudRender {
 
     private void dispatchCompute(GuiLayer guiLayer) {
         int id = computeShaderProgram.getProgramID();
+
+        createIndexBuffer();
 
         glUseProgram(id);
         parseComputeUniform(id, guiLayer);
@@ -167,7 +183,7 @@ public class PointCloudRender {
     }
 
     private void parseComputeUniform(int id, GuiLayer guiLayer) {
-        glUniform1i(glGetUniformLocation(id, "vertexArrayLength"), (int) availableMemory);
+        glUniform1i(glGetUniformLocation(id, "vertexArrayLength"), (int) maxPoints);
         glUniform1i(glGetUniformLocation(id, "gridDensity"), gridDensity);
         glUniform1f(glGetUniformLocation(id, "range"), range);
         glUniform3i(glGetUniformLocation(id, "ranges"), dimensions[0], dimensions[1], dimensions[2]);
@@ -202,7 +218,7 @@ public class PointCloudRender {
         shaderProgram.unbind();
     }
 
-    private void parseUniform(GuiLayer guiLayer, Camera camera) {
+    private void parseVertexUniform(GuiLayer guiLayer, Camera camera) {
         uniformsMap.setUniform("projection", camera.getProjectionMatrix());
         uniformsMap.setUniform("view", camera.getViewMatrix());
         uniformsMap.setUniform("minPointSize", (float) guiLayer.quadSize);
@@ -231,6 +247,7 @@ public class PointCloudRender {
         return texture;
     }
 
+
     private int createDepthTexture() {
         int depthTexture = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, depthTexture);
@@ -242,6 +259,7 @@ public class PointCloudRender {
         glBindTexture(GL_TEXTURE_2D, 0);
         return depthTexture;
     }
+
 
     public void resize(int width, int height) {
         sceneSettings.width = width;
@@ -274,7 +292,7 @@ public class PointCloudRender {
 
     public void render(GuiLayer guiLayer, Camera camera) {
         shaderProgram.bind();
-        parseUniform(guiLayer, camera);
+        parseVertexUniform(guiLayer, camera);
 
         if (guiLayer.drawMode) renderToFBO();
         else customPointCloudRender.render(guiLayer, camera);

@@ -10,13 +10,29 @@
 
 layout(local_size_x = 1024) in;
 
+
+struct customVec3 {
+    float x;
+    float y;
+    float z;
+};
+
 layout (std430, binding = 0) buffer Points {
-    vec3 points[]; // Output vertices
+    customVec3 points[];
+};
+
+layout (std430, binding = 5) buffer Points2 {
+    customVec3 points2[];
 };
 
 layout (std430, binding = 1) buffer NormalBuffer {
-    vec3 normals[]; // Output vertices
+    customVec3 normals[];
 };
+
+layout (std430, binding = 6) buffer NormalBuffer2 {
+    customVec3 normals2[];
+};
+
 
 layout (std430, binding = 3) buffer depthBuffer {
     uint ssDepthBuffer[]; // Output vertices
@@ -38,7 +54,19 @@ void main() {
     if (globalID > pointCount) return;
 
     //depth pass
-    vec4 pos = projection * view * vec4(points[globalID], 1.0);
+    vec4 posPoint;
+    vec3 normal;
+    if(globalID < 357913941){
+        posPoint = vec4(vec3(points[globalID].x,points[globalID].y,points[globalID].z), 1.0);
+        normal = vec3(normals[globalID].x,normals[globalID].y,normals[globalID].z);
+    }else{
+        globalID -= 357913941;
+        posPoint = vec4(vec3(points2[globalID].x,points2[globalID].y,points2[globalID].z), 1.0);
+        normal = vec3(normals2[globalID].x,normals2[globalID].y,normals2[globalID].z);
+    }
+
+
+    vec4 pos = projection * view * posPoint;
     pos.xyz = pos.xyz / pos.w;
 
     if(pos.w <= 0.0 || pos.x < -1.0 || pos.x > 1.0 || pos.y < -1.0 || pos.y > 1.0){
@@ -53,7 +81,6 @@ void main() {
     float bufferedDepth = uintBitsToFloat(ssDepthBuffer[pixelID]);
 
     //color pass
-    vec3 normal = vec3(normals[globalID]);
     ivec3 color = ivec3(int(normal.r * 255), int(normal.g * 255), int(normal.b * 255));
 
     if (depth <= bufferedDepth * 1.01) {

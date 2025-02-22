@@ -1,12 +1,31 @@
 #version 450
 
-#extension GL_ARB_gpu_shader_int64 : enable
-#extension GL_NV_shader_atomic_int64 : enable
+#extension GL_ARB_gpu_shader_int64: enable
+#extension GL_NV_shader_atomic_int64: enable
 
-layout(local_size_x = 1024) in;
+layout (local_size_x = 1024) in;
+
+
+struct customVec3 {
+    float x;
+    float y;
+    float z;
+};
 
 layout (std430, binding = 0) buffer Points {
-    vec3 points[]; // Output vertices
+    customVec3 points[];
+};
+
+layout (std430, binding = 5) buffer Points2 {
+    customVec3 points2[];
+};
+
+layout (std430, binding = 1) buffer NormalBuffer {
+    customVec3 normals[];
+};
+
+layout (std430, binding = 6) buffer NormalBuffer2 {
+    customVec3 normals2[];
 };
 
 layout (std430, binding = 3) buffer depthBuffer {
@@ -19,16 +38,23 @@ uniform ivec2 resolution;
 uniform int pointCount;
 
 
-void main(){
+void main() {
 
     uint globalID = gl_GlobalInvocationID.x;
     if (globalID > pointCount) return;
 
+    vec4 posPoint;
+    if (globalID < 357913941) {
+        posPoint = vec4(vec3(points[globalID].x, points[globalID].y, points[globalID].z), 1.0);
+    } else {
+        globalID -= 357913941;
+        posPoint = vec4(vec3(points2[globalID].x, points2[globalID].y, points2[globalID].z), 1.0);
+    }
 
-    vec4 pos = projection * view * vec4(points[globalID], 1.0);
+    vec4 pos = projection * view * posPoint;
     pos.xyz = pos.xyz / pos.w;
 
-    if(pos.w <= 0.0 || pos.x < -1.0 || pos.x > 1.0 || pos.y < -1.0 || pos.y > 1.0){
+    if (pos.w <= 0.0 || pos.x < -1.0 || pos.x > 1.0 || pos.y < -1.0 || pos.y > 1.0) {
         return;
     }
 
@@ -39,7 +65,7 @@ void main(){
     uint depth = floatBitsToUint(pos.w);
     uint old = ssDepthBuffer[pixelID];
 
-    if(depth < old){
+    if (depth < old) {
         atomicMin(ssDepthBuffer[pixelID], depth);
     }
 

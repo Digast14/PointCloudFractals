@@ -2,17 +2,35 @@
 
 layout (local_size_x = 10, local_size_y = 10, local_size_z = 10) in; // Work group size
 
+
+uniform int vertexArrayLength;
+
+struct customVec3{
+    float x;
+    float y;
+    float z;
+};
+
 layout (std430, binding = 0) buffer Points {
-    vec3 points[]; // Output vertices
+    customVec3 points[];
 };
+
+layout (std430, binding = 5) buffer Points2 {
+    customVec3 points2[];
+};
+
 layout (std430, binding = 1) buffer NormalBuffer {
-    vec3 normals[]; // Output vertices
+    customVec3 normals[];
 };
+
+layout (std430, binding = 6) buffer NormalBuffer2 {
+    customVec3 normals2[];
+};
+
 layout (std430, binding = 2) buffer GlobalIndex {
     uint globalIndex;
 };
 
-uniform int vertexArrayLength;
 uniform int gridDensity;
 uniform float range;
 uniform ivec3 ranges;
@@ -173,8 +191,8 @@ vec3 calculateNormal(in vec3 p) {
 }
 
 
-float random (vec2 st) {
-    return fract(sin(dot(st, vec2(12.9898,78.233))) * 43758.5453123)*2-1;
+float random(vec2 st) {
+    return fract(sin(dot(st, vec2(12.9898, 78.233))) * 43758.5453123) * 2 - 1;
 }
 
 shared uint indexLocal;
@@ -184,10 +202,10 @@ void main() {
     if (globalIndex >= vertexArrayLength) return;
 
     ivec3 gridIndex = ivec3(gl_GlobalInvocationID.xyz) - ranges * 5;
-    vec3 pos = vec3(dvec3(gridIndex)  / double(gridDensity));
+    vec3 pos = vec3(dvec3(gridIndex) / double(gridDensity));
 
     //ditter also affects normal if you want
-    pos += vec3(random(pos.xy), random(pos.xz + 0.31), random(pos.yz + 0.17)) / gridDensity * 0.3;
+    //pos += vec3(random(pos.xy), random(pos.xz + 0.31), random(pos.yz + 0.17)) / gridDensity * 0.3;
 
     bool isPartOfSet = JuliaSet(pos) <= 0;
     uint currentIndex = 0;
@@ -204,7 +222,6 @@ void main() {
         if (gl_LocalInvocationID == ivec3(0, 0, 0)) {
             indexLocal = 0;
             indexGlobalSaved = 0;
-
         }
         barrier();
 
@@ -217,8 +234,39 @@ void main() {
         }
         barrier();
         if (isPartOfSet) {
-            points[indexGlobalSaved + currentIndex] = pos.xyz;
-            normals[indexGlobalSaved + currentIndex] = calculateNormal(pos);
+            uint actualIndex = (indexGlobalSaved + currentIndex);
+
+            vec3 color = calculateNormal(pos);
+            points[actualIndex].x = pos.x;
+            points[actualIndex].y = pos.y;
+            points[actualIndex].z = pos.z;
+
+            normals[actualIndex].x = color.x;
+            normals[actualIndex].y = color.y;
+            normals[actualIndex].z = color.z;
+
+
+
+            if(actualIndex<357913941){
+                points[actualIndex].x = pos.x;
+                points[actualIndex].y = pos.y;
+                points[actualIndex].z = pos.z;
+
+                normals[actualIndex].x = color.x;
+                normals[actualIndex].y = color.y;
+                normals[actualIndex].z = color.z;
+            }else{
+                actualIndex -= 357913941;
+                points2[actualIndex].x = pos.x;
+                points2[actualIndex].y = pos.y;
+                points2[actualIndex].z = pos.z;
+
+                normals2[actualIndex].x = color.x;
+                normals2[actualIndex].y = color.y;
+                normals2[actualIndex].z = color.z;
+            }
+
         }
     }
+
 }
