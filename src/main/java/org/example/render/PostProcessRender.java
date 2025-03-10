@@ -13,9 +13,12 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
+import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
+
 import static org.lwjgl.opengl.GL45.*;
 import static org.lwjgl.stb.STBImage.stbi_image_free;
 import static org.lwjgl.stb.STBImage.stbi_load;
+
 
 public class PostProcessRender {
 
@@ -162,6 +165,9 @@ public class PostProcessRender {
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         postProcessingProgram.unbind();
+
+
+
     }
 
     public void cleanUp() {

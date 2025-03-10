@@ -4,6 +4,7 @@ import org.example.gui.GuiLayer;
 import org.example.scene.Camera;
 import org.example.render.shader.ShaderProgramm;
 import org.example.render.shader.UniformsMap;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -14,6 +15,7 @@ import static java.lang.Math.min;
 import static java.sql.Types.NULL;
 import static org.lwjgl.opengl.GL15.glBufferSubData;
 import static org.lwjgl.opengl.GL43.*;
+import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
 
 public class PointCloudRender {
 
@@ -302,6 +304,10 @@ public class PointCloudRender {
         if (guiLayer.drawMode) renderToFBO();
         else customPointCloudRender.render(guiLayer, camera);
 
+        if(guiLayer.test){
+            guiLayer.test = false;
+            renderoToPNG();
+        }
 
         shaderProgram.unbind();
         postProcessRender.render(sceneSettings, guiLayer, camera);
@@ -318,6 +324,15 @@ public class PointCloudRender {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
+    private void renderoToPNG(){
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+        ByteBuffer data =  MemoryUtil.memAlloc(sceneSettings.width*sceneSettings.height*4*Float.BYTES);
+        glReadPixels(0,0,sceneSettings.width,sceneSettings.height,GL_RGB,GL_BYTE,data);
+        stbi_write_png("imageTestSave.png",sceneSettings.width,sceneSettings.height,8,data,1);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 
 
 

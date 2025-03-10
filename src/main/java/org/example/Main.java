@@ -1,5 +1,6 @@
 package org.example;
 
+
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import org.example.render.WorldRender;
@@ -11,7 +12,7 @@ public class Main implements IAppLogic {
 
     public static void main(String[] args) {
         Main main = new Main();
-        Engine gameEngine = new Engine("Point Cloud Shader", 1920, 1080, main);
+        Engine gameEngine = new Engine("Point Cloud Shader", 1280, 720, main);
         gameEngine.run();
     }
 

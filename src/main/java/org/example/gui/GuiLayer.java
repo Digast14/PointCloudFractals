@@ -157,6 +157,10 @@ public class GuiLayer {
     private boolean customDimensions;
     public final int[] cDimensions = {16, 16, 16};
 
+
+    //test button
+    public boolean test = false;
+
     //-----------------------------------------------------------------------
     public void gui() {
 
@@ -215,8 +219,6 @@ public class GuiLayer {
             if (ImGui.checkbox("timerAuto", autoT)) {
                 autoT = !autoT;
             }
-
-
 
             if (autoT) {
                 if (ImGui.sliderFloat("change speed", startFloatSpeed, 0.0f, 10.0f)) {
@@ -298,6 +300,10 @@ public class GuiLayer {
                     }
                     if(ImGui.inputInt("Post process mode", blurStart)){
                         blur = blurStart.get();
+                    }
+
+                    if(ImGui.button("test button")){
+                        test = true;
                     }
                 }
             } else {
