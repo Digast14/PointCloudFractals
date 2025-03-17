@@ -7,13 +7,11 @@ import org.example.render.shader.UniformsMap;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.Locale;
 
 
 import static java.lang.Math.min;
 import static java.sql.Types.NULL;
-import static org.lwjgl.opengl.GL15.glBufferSubData;
 import static org.lwjgl.opengl.GL43.*;
 import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
 
@@ -22,7 +20,7 @@ public class PointCloudRender {
     private ShaderProgramm computeShaderProgram;
     private ShaderProgramm shaderProgram;
 
-    private SceneSettings sceneSettings;
+    private final SceneSettings sceneSettings;
 
     private int ssbo;
     private int normalBuffer;
@@ -30,7 +28,7 @@ public class PointCloudRender {
     private int pointCount;
 
     private float range;
-    private int[] dimensions = new int[3];
+    private final int[] dimensions = new int[3];
     private long totalThreads;
     private long maxPoints;
 
@@ -72,8 +70,6 @@ public class PointCloudRender {
         System.out.println();
     }
 
-
-
     public void initShaders(GuiLayer guiLayer) {
         computeShaderProgram = new ShaderProgramm("/shaders/PointCloud/ComputeShader.comp", GL_COMPUTE_SHADER);
         shaderProgram = new ShaderProgramm("/shaders/PointCloud/vertexShader.vert", GL_VERTEX_SHADER, "/shaders/PointCloud/fragmentShader.frag", GL_FRAGMENT_SHADER);
@@ -82,7 +78,6 @@ public class PointCloudRender {
         System.out.println("Compute Shader ID: " + computeShaderProgram.getProgramID());
         System.out.println("Vertex Shader ID: " + shaderProgram.getProgramID());
         System.out.println("-------------------------");
-
 
         dispatchCompute(guiLayer);
         dispatchVertex();
@@ -99,22 +94,25 @@ public class PointCloudRender {
         setSettings();
         glDeleteBuffers(ssbo);
         glDeleteBuffers(normalBuffer);
-        createIndexBuffer();
+        globalIndexBuffer = createIndexBuffer();
         dispatchCompute(guiLayer);
         guiLayer.setPointCount(pointCount);
 
         customPointCloudRender.updatePointCount(pointCount);
     }
 
-    private void createIndexBuffer() {
-        globalIndexBuffer = glGenBuffers();
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalIndexBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, 32, GL_DYNAMIC_COPY);
+    private int createIndexBuffer() {
+        int globalIndexBuffer = glGenBuffers();
 
-        ByteBuffer buffer = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder());
-        buffer.putInt(0).flip();
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, buffer);
+        ByteBuffer buffer = MemoryUtil.memAlloc(4);
+        buffer.putInt(0).rewind();
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalIndexBuffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, buffer, GL_DYNAMIC_COPY);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, globalIndexBuffer);
+
+        MemoryUtil.memAddress(buffer);
+        return globalIndexBuffer;
     }
 
     //up to 8GB storage usage before second Buffer is created. max Size 16 GB
@@ -133,8 +131,6 @@ public class PointCloudRender {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, ssbo2);
         }
 
-
-
         normalBuffer = glGenBuffers();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, normalBuffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, min((long) pointCount * 12 , maxStorage), GL_DYNAMIC_DRAW);
@@ -149,22 +145,23 @@ public class PointCloudRender {
     }
 
     private void setPointCountReset() {
+        ByteBuffer buffer = MemoryUtil.memAlloc(4);
+        buffer.putInt(0).rewind();
+
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, globalIndexBuffer);
         pointCount = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY).asIntBuffer().get();
 
-        glBufferData(GL_SHADER_STORAGE_BUFFER, 32, GL_DYNAMIC_DRAW);
-        ByteBuffer buffer = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder());
-        buffer.putInt(0).flip();
-
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, buffer, GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, globalIndexBuffer);
+
+        MemoryUtil.memAddress(buffer);
     }
 
 
     private void dispatchCompute(GuiLayer guiLayer) {
         int id = computeShaderProgram.getProgramID();
 
-        createIndexBuffer();
+        globalIndexBuffer = createIndexBuffer();
 
         glUseProgram(id);
         parseComputeUniform(id, guiLayer);
