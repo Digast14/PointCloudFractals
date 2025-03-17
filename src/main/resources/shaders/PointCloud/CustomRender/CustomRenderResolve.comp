@@ -28,7 +28,7 @@ uvec4 rgbAt(int pixelID) {
         return uvec4(backgroundColor * 255, 255); //if error, screen red
     }
 
-    uvec4 icolor = uvec4(r, g, b, a);
+    uvec4 icolor = uvec4(r, g, b, 255);
 
     if (a == 0xffffffff) {
         icolor = uvec4(255, 0, 0, 255);

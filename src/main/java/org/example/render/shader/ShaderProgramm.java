@@ -1,7 +1,10 @@
 package org.example.render.shader;
 
+import org.lwjgl.system.MemoryUtil;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -11,11 +14,12 @@ import java.util.Scanner;
 
 import static org.lwjgl.opengl.GL11.GL_FALSE;
 import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
 
 public class ShaderProgramm {
 
     private int programID;
-    private Map<Integer, String> sourceCodes;
+    private final Map<Integer, String> sourceCodes;
 
     public ShaderProgramm(String path, int type, String path2, int type2) {
         sourceCodes = new HashMap<>();
@@ -56,16 +60,14 @@ public class ShaderProgramm {
         }
 
         if (sourceCodes.size() == 1) {
-            int shader1 = shaderEdit;
-            programID = createProgram(shader1);
-            glDeleteShader(shader1);
+            programID = createProgram(shaderEdit);
+            glDeleteShader(shaderEdit);
         }
 
         if (sourceCodes.size() == 2) {
-            int shader1 = shaderEdit;
             int shader2 = createShaderFromSource(readFile(sourceCodes.get(otherType)), otherType);
-            programID = createProgram(shader1, shader2);
-            glDeleteShader(shader1);
+            programID = createProgram(shaderEdit, shader2);
+            glDeleteShader(shaderEdit);
         }
 
         System.out.println("succesful recompile of shader:" + programID);
@@ -143,6 +145,15 @@ public class ShaderProgramm {
             glDeleteProgram(programID);
             programID = 0;
         }
+    }
+
+    public static void renderToPNG(String fileName, int width, int height){
+
+        ByteBuffer data =  MemoryUtil.memAlloc(width*height*4);
+        glReadPixels(0,0,width,height,GL_RGBA,GL_UNSIGNED_BYTE,data);
+        stbi_write_png(fileName,width,height,4,data,width*4);
+
+        MemoryUtil.memFree(data);
     }
 }
 

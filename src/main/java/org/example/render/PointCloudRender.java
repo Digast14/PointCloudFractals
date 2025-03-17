@@ -9,11 +9,11 @@ import org.lwjgl.system.MemoryUtil;
 import java.nio.ByteBuffer;
 import java.util.Locale;
 
-
 import static java.lang.Math.min;
 import static java.sql.Types.NULL;
 import static org.lwjgl.opengl.GL43.*;
-import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
+import static org.lwjgl.stb.STBImageWrite.stbi_flip_vertically_on_write;
+
 
 public class PointCloudRender {
 
@@ -68,7 +68,11 @@ public class PointCloudRender {
         System.out.print("max Points: ");
         System.out.printf(Locale.US, "%,d", maxPoints);
         System.out.println();
+
+        stbi_flip_vertically_on_write(true);
     }
+
+
 
     public void initShaders(GuiLayer guiLayer) {
         computeShaderProgram = new ShaderProgramm("/shaders/PointCloud/ComputeShader.comp", GL_COMPUTE_SHADER);
@@ -78,6 +82,7 @@ public class PointCloudRender {
         System.out.println("Compute Shader ID: " + computeShaderProgram.getProgramID());
         System.out.println("Vertex Shader ID: " + shaderProgram.getProgramID());
         System.out.println("-------------------------");
+
 
         dispatchCompute(guiLayer);
         dispatchVertex();
@@ -130,6 +135,7 @@ public class PointCloudRender {
             glBufferData(GL_SHADER_STORAGE_BUFFER, min((long) pointCount * 12 - maxStorage, maxStorage), GL_DYNAMIC_DRAW);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, ssbo2);
         }
+
 
         normalBuffer = glGenBuffers();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, normalBuffer);
@@ -301,13 +307,13 @@ public class PointCloudRender {
         if (guiLayer.drawMode) renderToFBO();
         else customPointCloudRender.render(guiLayer, camera);
 
-        if(guiLayer.test){
-            guiLayer.test = false;
-            renderoToPNG();
-        }
-
         shaderProgram.unbind();
         postProcessRender.render(sceneSettings, guiLayer, camera);
+
+        if(guiLayer.saveImage){
+            guiLayer.saveImage = false;
+            ShaderProgramm.renderToPNG(guiLayer.fileName, width, height);
+        }
     }
 
 
@@ -320,17 +326,6 @@ public class PointCloudRender {
         glDrawArrays(GL_POINTS, 0, pointCount);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
-
-    private void renderoToPNG(){
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-        ByteBuffer data =  MemoryUtil.memAlloc(sceneSettings.width*sceneSettings.height*4*Float.BYTES);
-        glReadPixels(0,0,sceneSettings.width,sceneSettings.height,GL_RGB,GL_BYTE,data);
-        stbi_write_png("imageTestSave.png",sceneSettings.width,sceneSettings.height,8,data,1);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
-
 
 
     public void cleanup() {

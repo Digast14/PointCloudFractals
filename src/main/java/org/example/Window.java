@@ -3,9 +3,6 @@ package org.example;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
-import org.lwjgl.opengl.GL43;
-import org.lwjgl.opengl.GLDebugMessageCallback;
-import org.lwjgl.system.MemoryUtil;
 import org.tinylog.Logger;
 
 import java.util.concurrent.Callable;
@@ -30,7 +27,6 @@ public class Window {
 
         GLFWErrorCallback.createPrint(System.err).set();
         if (!glfwInit()) throw new IllegalStateException("Unable to initialize GLFW");
-
 
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);

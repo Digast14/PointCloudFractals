@@ -13,8 +13,8 @@ public class FunctionMakerGLSL {
     private final Stack<String> sortedTokenStack = new Stack<>();
     private Stack<String> tokenStack = new Stack<>();
     private final String function;
-    public String code;
-    public int highestPolynomial = 2;
+    private final String code;
+    private int highestPolynomial = 2;
 
     public FunctionMakerGLSL(String _function) {
         function = _function;
@@ -26,13 +26,15 @@ public class FunctionMakerGLSL {
         tokenStack.clear();
     }
 
+
+
     //Actually turns sorted token Stack to glsl Code
-    public String makeCode() {
+    private String makeCode() {
         Stack<String> calculator = new Stack<>();
         Stack<String> _sortedTokenStack = reverseStack(sortedTokenStack);
 
         while (!_sortedTokenStack.isEmpty()) {
-            String savedA = "", savedB = "";
+            String savedA , savedB ;
             if (_sortedTokenStack.peek().charAt(0) != '_') {
                 if (_sortedTokenStack.peek().equals("sin") || _sortedTokenStack.peek().equals("cos") || _sortedTokenStack.peek().equals("exp") || _sortedTokenStack.peek().equals("abs") || _sortedTokenStack.peek().equals("ln")) {
                     savedA = calculator.peek();
@@ -158,7 +160,7 @@ public class FunctionMakerGLSL {
                 }
                 longToken = longToken + ")";
                 tokenStack.push(longToken);
-                if (!functionCopy.isEmpty()) functionCopy = functionCopy.substring(1);
+                functionCopy = functionCopy.substring(1);
             }//Turns single Operators to Tokens
             else if (functionCopy.startsWith("sin") || functionCopy.startsWith("cos") || functionCopy.startsWith("exp") || functionCopy.startsWith("abs") || functionCopy.startsWith("ln")) {
                 if (functionCopy.startsWith("ln")) {
@@ -222,5 +224,15 @@ public class FunctionMakerGLSL {
             notReversed.pop();
         }
         return reverse;
+    }
+
+
+
+    public String getCode(){
+        return code;
+    }
+
+    public int getPolynomialDegree(){
+        return highestPolynomial;
     }
 }

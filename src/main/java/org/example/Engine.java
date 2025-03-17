@@ -5,7 +5,6 @@ import org.example.gui.GuiLayer;
 import org.example.render.WorldRender;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.glfw.GLFW.glfwGetTime;
 
 
 public class Engine {
@@ -24,6 +23,7 @@ public class Engine {
 
         guiLayer = new GuiLayer();
         render = new WorldRender(window);
+        render.getPointCloudRender().initShaders(guiLayer);
 
         this.appLogic = appLogic;
         appLogic.init(window, render);
@@ -36,7 +36,6 @@ public class Engine {
         double previous = glfwGetTime();
         double steps = 0.0;
 
-        init();
         while (!glfwWindowShouldClose(window.getWindowPointer())) {
             glfwPollEvents();
 
@@ -57,11 +56,6 @@ public class Engine {
             glfwSwapBuffers(window.getWindowPointer());
         }
         cleanup();
-    }
-
-
-    public void init(){
-        render.getPointCloudRender().initShaders(guiLayer);
     }
 
 

@@ -1,6 +1,7 @@
 package org.example.gui;
 
 import imgui.ImGui;
+import imgui.flag.ImGuiInputTextFlags;
 import imgui.flag.ImGuiSliderFlags;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImFloat;
@@ -12,8 +13,6 @@ import org.joml.Vector4f;
 import java.util.Locale;
 
 public class GuiLayer {
-
-
     //Always available
 
     //by Order:
@@ -68,8 +67,8 @@ public class GuiLayer {
     public int maxIteration = 50;
 
     //Nudge Value
-    private final ImFloat nudgeValueStart = new ImFloat(0.0001f);
-    public float nudgeValue = 0.0001f;
+    private final ImFloat nudgeValueStart = new ImFloat(0.000001f);
+    public float nudgeValue = 0.000001f;
 
     //Only 2D
     private final int[] breakOutFactorStart = {10};
@@ -133,7 +132,7 @@ public class GuiLayer {
     public boolean drawMode;
 
     //jitter
-    private ImFloat jitterStrengthStart = new ImFloat(0.0f);
+    private final ImFloat jitterStrengthStart = new ImFloat(0.0f);
     public float jitterStrength = 0.0f;
 
 
@@ -158,8 +157,11 @@ public class GuiLayer {
     public final int[] cDimensions = {16, 16, 16};
 
 
-    //test button
-    public boolean test = false;
+    //saving Images
+    public boolean saveImage = false;
+    private final ImString fileNameStart = new ImString("imageSaved.png");
+    public String fileName = "imageSaved.png";
+    
 
     //-----------------------------------------------------------------------
     public void gui() {
@@ -178,11 +180,11 @@ public class GuiLayer {
             String func = functionInput.get();
             System.out.println("Text entered: " + func);
             FunctionMakerGLSL codeEdit = new FunctionMakerGLSL(func);
-            function = codeEdit.code;
+            function = codeEdit.getCode();
             System.out.println("GLSL Code injection: " + function);
             System.out.println("-------------------------");
             newFunction = true;
-            polynomialDegree = codeEdit.highestPolynomial;
+            polynomialDegree = codeEdit.getPolynomialDegree();
         }
         ImGui.pushItemWidth(0);
         if (ImGui.checkbox("custom q Zero", booleanQZeroC)) {
@@ -257,14 +259,32 @@ public class GuiLayer {
                 if (ImGui.dragInt("breakout factor", breakOutFactorStart, 1, 0, 100, "%d%%", ImGuiSliderFlags.AlwaysClamp)) {
                     breakOutFactor = breakOutFactorStart[0] / 100f;
                 }
+                ImGui.spacing();
+
+                if(ImGui.inputText("fileName", fileNameStart, ImGuiInputTextFlags.EnterReturnsTrue)){
+                    fileName = fileNameStart.get();
+                }
+                ImGui.sameLine();
+                if(ImGui.button("Save")){
+                    saveImage = true;
+                }
                 if (local3dFractal) {
                     if (ImGui.inputFloat("Range", FractalRange)) {
                         range = FractalRange.floatValue();
                     }
 
+                    if (ImGui.button("invert")) {
+                        reverse = (reverse + 1) % 2;
+                    }
+
+                    ImGui.spacing();
+
                     if(ImGui.checkbox("drawMethod", drawMode)){
                         drawMode = !drawMode;
                     }
+
+                    ImGui.spacing();
+
 
                     if (ImGui.inputInt("normal Precision", normalPrecisionStart)) {
                         normalPrecision = normalPrecisionStart.intValue();
@@ -272,12 +292,20 @@ public class GuiLayer {
                     if (ImGui.inputFloat("Normal Step Size", normalStepSizeStart)) {
                         normalStepSize = normalStepSizeStart.floatValue();
                     }
+
+                    ImGui.spacing();
+
+
                     if (ImGui.sliderInt("Quadsize", quadSizeStart, 0, 15)) {
                         quadSize = quadSizeStart[0];
                     }
                     if (ImGui.inputFloat("jitter strength", jitterStrengthStart)) {
                         jitterStrength = jitterStrengthStart.floatValue();
                     }
+
+                    ImGui.spacing();
+
+
                     if(!customDimensions){
                         if (ImGui.inputInt("Resolution", workGroupDimensionStart)) {
                             cDimensions[0] = workGroupDimensionStart.intValue();
@@ -288,6 +316,9 @@ public class GuiLayer {
                     if (ImGui.inputInt("Gb VRAM, ", VRamStart)) {
                         VRam = VRamStart.get();
                     }
+
+                    ImGui.spacing();
+
                     if (ImGui.checkbox("Custom XYZ Resolution", customDimensions)) {
                         customDimensions = !customDimensions;
                     }
@@ -295,16 +326,13 @@ public class GuiLayer {
                         ImGui.inputInt3("Custom XYZ Input", cDimensions);
                     }
 
-                    if (ImGui.button("invert")) {
-                        reverse = (reverse + 1) % 2;
-                    }
+
                     if(ImGui.inputInt("Post process mode", blurStart)){
                         blur = blurStart.get();
                     }
 
-                    if(ImGui.button("test button")){
-                        test = true;
-                    }
+
+
                 }
             } else {
                 if (ImGui.inputInt("Max Range Iteration", maxIterationStartRange)) {

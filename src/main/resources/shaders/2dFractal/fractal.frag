@@ -171,6 +171,7 @@ vec3 NewtonFractalQuaternion(in vec4 c) {
     return vec3(0.0);
 }
 
+
 vec3 NewtonMethod2(in vec4 c) {
     vec4 z;
     float breakOut = 64.0;

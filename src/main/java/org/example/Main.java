@@ -31,8 +31,8 @@ public class Main implements IAppLogic {
         ImGuiIO imGuiIO = ImGui.getIO();
         if (!imGuiIO.getWantCaptureKeyboard()) {
             Camera camera = render.getCamera();
-            float move = 1.5F * (float) frameRateMS;
-            move = 0.01F;
+            //float move = 1.5F * (float) frameRateMS;                  tried to make speed fps independent
+            float move = 0.01F;
             if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) camera.moveDown(move);
             if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_SPACE) == GLFW_PRESS) camera.moveUp(move);
             if (glfwGetKey(window.getWindowPointer(), GLFW_KEY_W) == GLFW_PRESS) camera.moveForward(move);

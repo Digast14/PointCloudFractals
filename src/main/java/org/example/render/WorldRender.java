@@ -71,7 +71,6 @@ public class WorldRender {
         else fractalRender.render(camera, guiLayer, window);
 
         guiRender.render(guiLayer);
-
     }
 
     private void updatePointCloudSettings(GuiLayer guiLayer) {

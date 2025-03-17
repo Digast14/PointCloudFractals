@@ -16,7 +16,7 @@ import static org.lwjgl.opengl.GL30.glDeleteVertexArrays;
 
 public class FractalRender {
 
-    private ShaderProgramm shaderProgram;
+    private final ShaderProgramm shaderProgram;
     private UniformsMap uniformsMap;
 
     private int vaoId;
@@ -70,7 +70,13 @@ public class FractalRender {
         shaderProgram.unbind();
 
         shaderChanges(guiLayer);
+
+        if(guiLayer.saveImage){
+            guiLayer.saveImage = false;
+            ShaderProgramm.renderToPNG(guiLayer.fileName, window.getWidth(), window.getHeight());
+        }
     }
+
 
     private void shaderChanges(GuiLayer guiLayer) {
         if (guiLayer.newFunction) {

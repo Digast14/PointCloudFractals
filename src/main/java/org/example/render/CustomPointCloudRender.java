@@ -27,7 +27,6 @@ public class CustomPointCloudRender {
     private final int fbo;
     private final int texture;
 
-
     private int width;
     private int height;
 
